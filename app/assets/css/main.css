@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+/* ============================
+   Paleta café–beige (solo claro)
+   ============================ */
+@theme {
+  /* BRAND (café) */
+  --color-brand-50: #f7f1ec;
+  --color-brand-100: #ede1d7;
+  --color-brand-200: #dcc4b1;
+  --color-brand-300: #c7a489;
+  --color-brand-400: #a77e5d;
+  --color-brand-500: #8b5e3c; /* canela */
+  --color-brand-600: #6e482e; /* cacao (CTA) */
+  --color-brand-700: #563824;
+  --color-brand-800: #3b241a; /* espresso (texto fuerte) */
+  --color-brand-900: #2c1d12;
+
+  /* SAND (beige) */
+  --color-sand-50: #faf7f2; /* lino */
+  --color-sand-100: #f2e9de; /* crema */
+  --color-sand-200: #e6d9c8;
+  --color-sand-300: #d9c2a6; /* latte */
+  --color-sand-400: #cbb292;
+
+  /* ACCENTOS */
+  --color-sage-500: #8fa382;
+  --color-olive-600: #6b7a40;
+  --color-terra-500: #c06e52;
+  --color-terra-600: #a35e46;
+  --color-terra-700: #864d39;
+  --color-gold-400: #d1b047;
+  --color-gold-300: #d9be68;
+  --color-gold-500: #c9a227;
+  --color-sapphire-700: #1f4d8f; /* azul petróleo elegante */
+  --color-burgundy-700: #7b2c2c; /* vino tinto sobrio */
+  --color-ink-900: #1e293b; /* tinta/azul grisáceo p/ títulos */
+  --color-forest-700: #355e3b; /* verde bosque profundo */
+}
+
+/* Ya puedes usar:
+   bg-brand-600 text-sand-50, text-brand-800, bg-sand-50, border-sand-300,
+   text-sage-500, text-olive-600, text-terra-500, text-gold-500, etc. */
