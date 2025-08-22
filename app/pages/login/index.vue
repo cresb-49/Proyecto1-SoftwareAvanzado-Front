@@ -1,11 +1,14 @@
 <script setup lang="ts">
+definePageMeta({
+  middleware: ["guest-only"],
+});
 import InputText from "~/components/ui/InputText.vue";
 import Button from "~/components/ui/Button.vue";
 import { useAuth } from "~/composables/useAuth"; // asumiendo que ya lo tienes
 import { reactive, ref } from "vue";
-import { useToast } from '~/composables/useToast'
+import { useToast } from "~/composables/useToast";
 
-const toast = useToast()
+const toast = useToast();
 const { login, isLoggedIn } = useAuth();
 
 const form = reactive({
@@ -33,7 +36,9 @@ async function onSubmit() {
     await login(form.user as unknown as string, form.password);
     toast.info("Inicio de sesión exitoso");
     // redirige donde quieras
-    await navigateTo("/");
+    //Obtenemos el valor de redirect
+    const redirect = useRoute().query.redirect || "/";
+    await navigateTo(redirect as string);
   } catch (e) {
     errors.global = "Usuario o contraseña inválidos";
     toast.error("Error al iniciar sesión");

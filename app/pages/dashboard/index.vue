@@ -23,7 +23,10 @@
 
           <p class="text-sm text-brand-700">{{ m.description }}</p>
 
-          <div class="mt-3 flex flex-wrap gap-1.5" v-if="!(Roles.CUSTOMER in currentRoles)">
+          <div
+            class="mt-3 flex flex-wrap gap-1.5"
+            v-if="!(Roles.CUSTOMER in currentRoles)"
+          >
             <span
               v-for="r in m.roles"
               :key="r"
@@ -49,6 +52,7 @@
 </template>
 
 <script lang="ts" setup>
+definePageMeta({ middleware: ["auth"] });
 import { computed } from "vue";
 import { Roles, useAuth } from "~/composables/useAuth";
 
@@ -110,7 +114,9 @@ const modules: Module[] = [
 // Roles del usuario actual
 const { user } = useAuth();
 const currentRoles = computed<string[]>(() => {
-  const roles = [user.value?.roleName].filter((r): r is string => typeof r === "string");
+  const roles = [user.value?.roleName].filter(
+    (r): r is string => typeof r === "string"
+  );
   return roles;
 });
 

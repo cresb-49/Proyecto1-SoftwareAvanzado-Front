@@ -21,6 +21,7 @@ export const useApi = () => {
       const msg = (response?._data as any)?.message || 'Ocurrió un error'
       if (response.status === 401) {
         toast.warning('Sesión expirada', { description: 'Vuelve a iniciar sesión.' })
+        
       } else {
         toast.error('Error', { description: `${response.status}: ${msg}` })
       }
