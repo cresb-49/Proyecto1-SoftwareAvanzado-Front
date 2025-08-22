@@ -106,7 +106,7 @@
 
         <template #footer>
           <div class="flex items-center justify-end">
-            <Button size="sm" variant="primary" :to="`/reservaciones?hotelId=${hotel?.id}`"
+            <Button size="sm" variant="primary" :to="`/reservaciones/crear?hotelId=${hotel?.id}`"
               >Reservar</Button>
           </div>
         </template>
