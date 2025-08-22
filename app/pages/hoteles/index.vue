@@ -43,6 +43,14 @@
                   >
                     Editar
                   </Button>
+                  <Button
+                    v-if="canManageHotels"
+                    size="sm"
+                    variant="warning"
+                    :to="`/hoteles/habitaciones/${hotel.id}`"
+                  >
+                    Habitaciones
+                  </Button>
                 </div>
               </div>
             </template>

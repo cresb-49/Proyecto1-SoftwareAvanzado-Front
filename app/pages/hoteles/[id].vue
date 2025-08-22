@@ -93,7 +93,8 @@
 
         <template #footer>
           <div class="flex items-center justify-end">
-            <Button size="sm" variant="primary">Reservar</Button>
+            <Button size="sm" variant="primary" :to="`/reservaciones?hotelId=${hotel?.id}`"
+              >Reservar</Button>
           </div>
         </template>
       </Card>
@@ -102,7 +103,6 @@
 </template>
 
 <script lang="ts" setup>
-definePageMeta({ middleware: ["auth"] });
 
 import { ref, computed, watchEffect } from "vue";
 import { useRoute } from "vue-router";
