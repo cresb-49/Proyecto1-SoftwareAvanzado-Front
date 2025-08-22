@@ -65,33 +65,64 @@ const classes = computed(() =>
 </script>
 
 <template>
-  <component
-    :is="to ? 'NuxtLink' : 'button'"
-    v-bind="to ? { to } : { type, disabled: disabled || loading }"
-    :class="classes"
-    :aria-busy="loading || undefined"
-  >
-    <!-- Spinner opcional cuando loading -->
-    <svg
-      v-if="loading"
-      class="h-4 w-4 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
+  <template v-if="to">
+    <NuxtLink
+      v-bind="to ? { to } : { type, disabled: disabled || loading }"
+      :class="classes"
+      :aria-busy="loading || undefined"
     >
-      <circle
-        class="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        stroke-width="4"
-      />
-      <path
-        class="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-      />
-    </svg>
-    <slot />
-  </component>
+      <!-- Spinner opcional cuando loading -->
+      <svg
+        v-if="loading"
+        class="h-4 w-4 animate-spin"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        />
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+        />
+      </svg>
+      <slot />
+    </NuxtLink>
+  </template>
+  <template v-else>
+    <button
+      v-bind="to ? { to } : { type, disabled: disabled || loading }"
+      :class="classes"
+      :aria-busy="loading || undefined"
+    >
+      <!-- Spinner opcional cuando loading -->
+      <svg
+        v-if="loading"
+        class="h-4 w-4 animate-spin"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        />
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+        />
+      </svg>
+      <slot />
+    </button>
+  </template>
 </template>

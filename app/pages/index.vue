@@ -80,78 +80,67 @@
     <!-- DESTACADOS -->
     <section>
       <div class="mb-4 flex items-end justify-between">
-        <h2 class="text-xl font-semibold text-brand-900">Destacados</h2>
+        <h2 class="text-xl font-semibold text-brand-900">Hoteles Destacados</h2>
         <!--<NuxtLink
           to="/explorar"
           class="text-sm text-brand-700 hover:text-brand-600"
           >Ver todo →</NuxtLink
         >-->
       </div>
-
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <!-- Hotel 1 -->
-        <Card
-          img="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          title="Hotel La Terraza"
-          subtitle="Antigua Guatemala"
-          variant="elevated"
-        >
+        <template v-for="hotel in hotels?.slice(0, 3)">
+          <Card
+          :img="hotel.image"
+          :title="hotel.name"
+          :subtitle="hotel.address"
+          >
           <p class="text-sm text-brand-800">
-            Habitaciones luminosas, patio central con flores y desayuno
-            artesanal incluido.
+            {{hotel.description}}
           </p>
           <template #footer>
             <div class="flex items-center justify-between">
-              <span class="text-sm text-brand-700"
+              <!--<span class="text-sm text-brand-700"
                 >Desde <strong class="text-brand-900">Q650</strong>/noche</span
-              >
-              <Button size="sm" variant="primary" to="/hoteles/1"
-                >ver</Button
-              >
+              >-->
+              <Button size="sm" variant="info" :to="`/hoteles/${hotel.id}`">ver</Button>
             </div>
           </template>
-        </Card>
+          </Card>
+        </template>
+      </div>
+    </section>
 
-        <!-- Restaurante 1 -->
-        <Card
-          img="https://plus.unsplash.com/premium_photo-1661883237884-263e8de8869b?q=80&w=1189&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          title="Café Canela"
-          subtitle="Zona 4, Guatemala"
-          variant="outline"
-        >
+    <section>
+      <div class="mb-4 flex items-end justify-between">
+        <h2 class="text-xl font-semibold text-brand-900">Restaurantes Destacados</h2>
+        <!--<NuxtLink
+          to="/explorar"
+          class="text-sm text-brand-700 hover:text-brand-600"
+          >Ver todo →</NuxtLink
+        >-->
+      </div>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <!-- Hotel 1 -->
+        <template v-for="restaurant in restaurants?.slice(0, 3)">
+          <Card
+          :img="restaurant.image"
+          :title="restaurant.name"
+          :subtitle="restaurant.address"
+          >
           <p class="text-sm text-brand-800">
-            Brunch de temporada, pan de masa madre y café de finca seleccionado.
-          </p>
-          <template #footer>
-            <div class="flex items-center justify-end">
-              <Button size="sm" variant="info" to="/restaurantes/1"
-                >ver</Button
-              >
-            </div>
-          </template>
-        </Card>
-
-        <!-- Hotel 2 -->
-        <Card
-          img="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          title="Vista Mar"
-          subtitle="Puerto San José"
-          variant="elevated"
-        >
-          <p class="text-sm text-brand-800">
-            Frente al mar, piscina infinita y coctelería de autor al atardecer.
+            {{restaurant.description}}
           </p>
           <template #footer>
             <div class="flex items-center justify-between">
-              <span class="text-sm text-brand-700"
-                >Desde <strong class="text-brand-900">Q780</strong>/noche</span
-              >
-              <Button size="sm" variant="primary" to="/hoteles/2"
-                >Ver</Button
-              >
+              <!--<span class="text-sm text-brand-700"
+                >Desde <strong class="text-brand-900">Q650</strong>/noche</span
+              >-->
+              <Button size="sm" variant="info" :to="`/restaurantes/${restaurant.id}`">ver</Button>
             </div>
           </template>
-        </Card>
+          </Card>
+        </template>
       </div>
     </section>
 
@@ -175,6 +164,25 @@
 <script setup lang="ts">
 import Button from "~/components/ui/Button.vue";
 import Card from "~/components/ui/Card.vue";
+import { useHotelService } from "~/services/hotels";
+import { useRestaurantService } from "~/services/restaurants";
+
+const hotelService = useHotelService();
+const restaurantService = useRestaurantService();
+
+const {
+  data: hotels,
+  pending: loadingHotels,
+  error: loadingHotelsError,
+  refresh: refreshHotels,
+} = await useAsyncData("hotels", () => hotelService.getAll());
+
+const {
+  data: restaurants,
+  pending: loadingRestaurants,
+  error: loadingRestaurantsError,
+  refresh: refreshRestaurants,
+} = await useAsyncData("restaurants", () => restaurantService.getAll());
 </script>
 
 <style scoped></style>
