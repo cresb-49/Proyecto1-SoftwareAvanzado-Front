@@ -275,7 +275,7 @@ const currency = new Intl.NumberFormat("es-GT", {
 });
 const formatCurrency = (n: number) => currency.format(n || 0);
 const cancelPath = computed(() =>
-  user.value?.roleName === Roles.CUSTOMER ? "/reservaciones/reservas" : "/dashboard"
+  user.value?.roleName === Roles.CUSTOMER ? "/reservaciones/reservas" : "/reservaciones"
 );
 
 function validate() {

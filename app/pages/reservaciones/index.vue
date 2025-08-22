@@ -34,6 +34,14 @@
         <Button size="sm" variant="secondary" @click="clearFilters"
           >Limpiar filtros</Button
         >
+        <Button
+          v-if="canManage"
+          size="sm"
+          variant="primary"
+          :to="createPath"
+        >
+          Crear reservación
+        </Button>
       </div>
     </div>
 
@@ -91,6 +99,12 @@ const selectedHotelId = ref<string | null>(null);
 const selectedCustomerId = ref<string | null>(null);
 const page = ref(1);
 const search = ref("");
+
+const createPath = computed(() =>
+  selectedHotelId.value
+    ? `/reservaciones/crear?hotelId=${selectedHotelId.value}`
+    : "/reservaciones/crear"
+);
 
 // Hoteles para opciones (id -> name)
 const { data: hotelsData } = await useAsyncData(

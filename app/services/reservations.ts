@@ -41,17 +41,17 @@ export const useReservationService = () => {
 
   const checkIn = (reservationId: string) =>
     api<Reservation>(`${API_SEGMENT}/${reservationId}/check-in`, {
-      method: "POST",
+      method: "PATCH",
     });
 
   const checkOut = (reservationId: string) =>
     api<Reservation>(`${API_SEGMENT}/${reservationId}/check-out`, {
-      method: "POST",
+      method: "PATCH",
     });
 
   const pay = (reservationId: string) =>
     api<Reservation>(`${API_SEGMENT}/${reservationId}/paid`, {
-      method: "POST",
+      method: "PATCH",
     });
 
   const deleteReservation = (reservationId: string) =>
