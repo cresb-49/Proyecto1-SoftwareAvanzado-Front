@@ -18,7 +18,6 @@
         </Button>
       </div>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <!-- Hotel 1 -->
         <template v-for="hotel in hotels" :key="hotel.id">
           <Card
             :img="hotel.image"
