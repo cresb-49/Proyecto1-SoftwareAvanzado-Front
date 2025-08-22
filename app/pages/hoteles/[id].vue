@@ -30,7 +30,6 @@
             :src="hotel?.image"
             alt="Imagen del hotel"
             class="h-64 w-full object-cover sm:h-80"
-            @error="onImgError"
           />
           <div
             class="absolute inset-0 bg-gradient-to-t from-brand-900/40 to-transparent"
@@ -151,12 +150,4 @@ watchEffect(async () => {
     restaurant.value = null;
   }
 });
-
-function onImgError(e: Event) {
-  const el = e.target as HTMLImageElement;
-  el.src =
-    "https://images.unsplash.com/photo-1541976076758-347942db1970?q=80&auto=format&fit=crop&w=1600";
-}
 </script>
-
-<style scoped></style>
