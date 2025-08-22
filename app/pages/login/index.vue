@@ -3,7 +3,9 @@ import InputText from "~/components/ui/InputText.vue";
 import Button from "~/components/ui/Button.vue";
 import { useAuth } from "~/composables/useAuth"; // asumiendo que ya lo tienes
 import { reactive, ref } from "vue";
+import { useToast } from '~/composables/useToast'
 
+const toast = useToast()
 const { login, isLoggedIn } = useAuth();
 
 const form = reactive({
@@ -29,10 +31,12 @@ async function onSubmit() {
     loading.value = true;
     // tu composable puede esperar (email, password); aquí pasamos user como primer arg
     await login(form.user as unknown as string, form.password);
+    toast.info("Inicio de sesión exitoso");
     // redirige donde quieras
     await navigateTo("/");
   } catch (e) {
     errors.global = "Usuario o contraseña inválidos";
+    toast.error("Error al iniciar sesión");
   } finally {
     loading.value = false;
   }
