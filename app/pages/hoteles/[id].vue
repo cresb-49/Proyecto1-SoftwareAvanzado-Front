@@ -39,6 +39,19 @@
               <h1 class="text-xl font-semibold sm:text-2xl">
                 {{ hotel?.name }}
               </h1>
+              <div class="flex items-center gap-1" aria-label="Calificación">
+                <svg
+                  v-for="i in 5"
+                  :key="i"
+                  class="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  :class="i <= roundedRating ? 'text-gold-500' : 'text-sand-100/60'"
+                >
+                  <path d="M12 17.3l6.18 3.7-1.64-7.03L21 9.24l-7.19-.61L12 2 10.19 8.63 3 9.24l4.46 4.73L5.82 21z"/>
+                </svg>
+                <span v-if="hasRating" class="ml-2 text-sm text-sand-50/90">{{ displayRating }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -150,4 +163,13 @@ watchEffect(async () => {
     restaurant.value = null;
   }
 });
+
+const rating = computed(() => {
+  const r = (hotel.value as any)?.rating
+  const n = Number(r)
+  return Number.isFinite(n) ? Math.min(5, Math.max(0, n)) : 0
+})
+const roundedRating = computed(() => Math.round(rating.value))
+const hasRating = computed(() => rating.value > 0)
+const displayRating = computed(() => rating.value.toFixed(1))
 </script>
