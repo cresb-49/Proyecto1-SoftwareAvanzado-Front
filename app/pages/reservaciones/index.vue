@@ -1,27 +1,258 @@
 <template>
-  <div></div>
+  <div class="mx-auto max-w-6xl px-4 py-6">
+    <!-- Header + Filtros -->
+    <div
+      class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div>
+        <h1 class="text-xl font-semibold text-brand-900">Reservaciones</h1>
+        <p class="text-sm text-brand-700">
+          Filtra por hotel y/o cliente. Si no eliges nada, se muestran todas.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-end gap-2">
+        <div class="w-60">
+          <Select
+            v-model="selectedHotelId"
+            :options="hotelOptions"
+            label="Hotel"
+            placeholder="Todos los hoteles"
+            clearable
+            size="sm"
+          />
+        </div>
+        <div class="w-60">
+          <Select
+            v-model="selectedCustomerId"
+            :options="customerOptions"
+            label="Cliente"
+            placeholder="Todos los clientes"
+            clearable
+            size="sm"
+          />
+        </div>
+        <Button size="sm" variant="secondary" @click="clearFilters"
+          >Limpiar filtros</Button
+        >
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <Table
+      :columns="cols"
+      :items="rows"
+      :loading="pending"
+      :page-size="10"
+      v-model:page="page"
+      v-model:search="search"
+    >
+      <template #title>Listado de reservaciones</template>
+
+      <template #cell-acciones="{ row }">
+        <div class="flex items-center justify-end gap-2">
+          <Button size="sm" variant="info" :to="`/reservaciones/${row.id}`"
+            >Ver</Button
+          >
+          <Button size="sm" variant="danger" @click="onDelete(row)"
+            >Eliminar</Button
+          >
+        </div>
+      </template>
+    </Table>
+  </div>
 </template>
 
 <script lang="ts" setup>
 definePageMeta({ middleware: ["auth"] });
 
-import { reactive, ref, computed } from "vue";
-import { useUseRoles } from "~/composables/useRoles";
-import { Roles } from "#imports";
+import { ref, computed } from "vue";
+import Button from "~/components/ui/Button.vue";
+import Table, { type Column } from "~/components/ui/Table.vue";
+import Select from "~/components/ui/Select.vue";
+import { useReservationService } from "~/services/reservations";
 import { useHotelService } from "~/services/hotels";
 import { useToast } from "~/composables/useToast";
 import { useRoomService } from "~/services/rooms";
-
-import Button from "~/components/ui/Button.vue";
-import Card from "~/components/ui/Card.vue";
-import Select from "~/components/ui/Select.vue";
-import InputNumber from "~/components/ui/InputNumber.vue";
-import InputCurrency from "~/components/ui/InputCurrency.vue";
+import { Roles } from "#imports";
+import { useUseRoles } from "~/composables/useRoles";
 
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
-const permitedRoles = [Roles.ADMIN, Roles.HOTEL_MANAGER, Roles.CUSTOMER];
-const canManageHotels = computed(() => hasAnyRole(permitedRoles));
+const permitedRoles = [Roles.ADMIN, Roles.HOTEL_MANAGER];
+const canManage = computed(() => hasAnyRole(permitedRoles));
 redirectIfUnauthorized(permitedRoles, "/");
+
+const toast = useToast();
+const reservationsSvc = useReservationService();
+const hotelsSvc = useHotelService();
+const roomService = useRoomService();
+
+// Filtros
+const selectedHotelId = ref<string | null>(null);
+const selectedCustomerId = ref<string | null>(null);
+const page = ref(1);
+const search = ref("");
+
+// Hoteles para opciones (id -> name)
+const { data: hotelsData } = await useAsyncData(
+  "hotels:for-reservations:list",
+  () => hotelsSvc.getAll?.(),
+  { server: true }
+);
+const hotels = computed<any[]>(() => {
+  const val = hotelsData.value as any;
+  return Array.isArray(val) ? val : val?.items || [];
+});
+const hotelOptions = computed(() =>
+  hotels.value.map((h) => ({ label: h.name, value: h.id }))
+);
+const hotelNameById = computed<Record<string, string>>(() =>
+  hotels.value.reduce((acc: Record<string, string>, h: any) => {
+    acc[h.id] = h.name;
+    return acc;
+  }, {})
+);
+
+// Clientes (fake mientras se implementa servicio real)
+const customerOptions = ref([
+  { value: "b7b7f1b6-1f75-4d01-9e3e-1b8d5b1a1111", label: "María López" },
+  { value: "0f3e2d9a-2a44-4b55-8c1a-9dc7f2a22222", label: "Juan Pérez" },
+  { value: "9a8b7c6d-3e21-4f43-9c0b-2e1f3d3a33333", label: "Ana García" },
+  { value: "1c2d3e4f-4a5b-6c7d-8e9f-0a1b2c3d44444", label: "Carlos Ruiz" },
+  { value: "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f55555", label: "Sofía Martínez" },
+]);
+const customerNameById = computed<Record<string, string>>(() =>
+  customerOptions.value.reduce((acc: Record<string, string>, c: any) => {
+    acc[c.value] = c.label;
+    return acc;
+  }, {})
+);
+
+// Cargar reservaciones según los filtros (3 endpoints distintos)
+const {
+  data: reservationsData,
+  pending,
+  refresh,
+} = await useAsyncData(
+  () =>
+    `reservations:list:${selectedHotelId.value || "-"}:${
+      selectedCustomerId.value || "-"
+    }`,
+  () => {
+    if (selectedHotelId.value && selectedCustomerId.value) {
+      return reservationsSvc.reservationsByCustomerAndHotel(
+        selectedCustomerId.value,
+        selectedHotelId.value
+      );
+    }
+    if (selectedHotelId.value) {
+      return reservationsSvc.reservationsByHotel(selectedHotelId.value);
+    }
+    if (selectedCustomerId.value) {
+      return reservationsSvc.reservationsByCustomer(selectedCustomerId.value);
+    }
+    return reservationsSvc.getAll();
+  },
+  { watch: [selectedHotelId, selectedCustomerId] }
+);
+
+// Rooms por ids (a partir de las reservaciones)
+const reservationList = computed<any[]>(() => reservationsData.value || []);
+const roomIds = computed<string[]>(() => {
+  const ids = reservationList.value
+    .map((r: any) => r.roomId)
+    .filter(Boolean) as string[];
+  return Array.from(new Set(ids));
+});
+const { data: roomsByIds } = await useAsyncData(
+  () => `rooms:by-ids:${roomIds.value.length ? roomIds.value.join(",") : "-"}`,
+  () =>
+    roomIds.value.length
+      ? roomService.getByIds(roomIds.value)
+      : Promise.resolve([]),
+  { watch: [roomIds] }
+);
+const roomMap = computed<Record<string, any>>(() => {
+  const map: Record<string, any> = {};
+  for (const r of (roomsByIds.value || []) as any[]) {
+    map[r.id] = r;
+  }
+  return map;
+});
+
+// Formateador de moneda para etiquetas de habitación
+const currency = new Intl.NumberFormat("es-GT", {
+  style: "currency",
+  currency: "GTQ",
+});
+
+type Row = {
+  id: any;
+  hotelName: string;
+  customerName: string;
+  roomId: any;
+  roomLabel: string;
+  checkInDate: any;
+  checkOutDate: any;
+  state: any;
+};
+const mapRow = (r: any): Row => {
+  const room = roomMap.value[r.roomId];
+  const label = room
+    ? `#${room.number} — ${currency.format(Number(room.price))}`
+    : r.roomId ?? "—";
+  return {
+    id: r.id,
+    hotelName: hotelNameById.value[r.hotelId] || r.hotelId,
+    customerName: customerNameById.value[r.customerId] || r.customerId,
+    roomId: r.roomId,
+    roomLabel: label,
+    checkInDate: r.checkInDate,
+    checkOutDate: r.checkOutDate,
+    state: r.state,
+  };
+};
+
+const rows = computed<Row[]>(() => (reservationsData.value || []).map(mapRow));
+
+// Tabla
+const dt = new Intl.DateTimeFormat("es-GT", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+const stateText = (s: number) =>
+  ((
+    { 0: "Confirmada", 1: "Check-in", 2: "Check-out" } as Record<number, string>
+  )[s] || "—");
+
+const cols: Column<Row>[] = [
+  { key: "hotelName", label: "Hotel", sortable: true },
+  { key: "customerName", label: "Cliente", sortable: true },
+  { key: "roomLabel", label: "Habitación", sortable: true },
+  {
+    key: "checkInDate",
+    label: "Check-in",
+    format: (v) => dt.format(new Date(v)),
+  },
+  {
+    key: "checkOutDate",
+    label: "Check-out",
+    format: (v) => dt.format(new Date(v)),
+  },
+  { key: "state", label: "Estado", format: (v) => stateText(Number(v)), sortable: true },
+  { key: "acciones", label: "Acciones", align: "right" },
+];
+
+function clearFilters() {
+  selectedHotelId.value = null;
+  selectedCustomerId.value = null;
+}
+
+async function onDelete(row: Row) {
+  if (!confirm(`¿Eliminar reservación de ${row.customerName}?`)) return;
+  await reservationsSvc.deleteReservation(row.id);
+  toast.success("Reservación eliminada");
+  refresh();
+}
 </script>
 
-<style></style>
+<style scoped></style>
