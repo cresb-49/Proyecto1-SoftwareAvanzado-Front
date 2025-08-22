@@ -4,6 +4,7 @@ export interface Restaurant {
   address: string;
   description: string;
   image: string;
+  rating: number;
 }
 
 export interface CreateRestaurantRequest {}

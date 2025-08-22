@@ -5,6 +5,7 @@ export interface Hotel {
   description: string;
   address: string;
   image: string;
+  rating: number;
 }
 
 export interface CreateHotelRequest {}
