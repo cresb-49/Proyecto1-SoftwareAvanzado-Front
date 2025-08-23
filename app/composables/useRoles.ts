@@ -12,11 +12,24 @@ export const useUseRoles = () => {
     redirectPath: string
   ) => {
     if (!hasAnyRole(rolesToCheck)) {
-      console.log(`Acceso denegado. Redirigiendo a ${redirectPath}`);
       return navigateTo(redirectPath);
     }
     return;
   };
 
-  return { hasAnyRole, redirectIfUnauthorized };
+  const redirectIfAdmin = (redirectPath: string) => {
+    if (!hasAnyRole([Roles.ADMIN])) {
+      return navigateTo(redirectPath);
+    }
+    return;
+  };
+
+  const redirectIfNotCustomer = (redirectPath: string) => {
+    if (!hasAnyRole([Roles.CUSTOMER])) {
+      return navigateTo(redirectPath);
+    }
+    return;
+  };
+
+  return { hasAnyRole, redirectIfUnauthorized, redirectIfAdmin, redirectIfNotCustomer };
 };
