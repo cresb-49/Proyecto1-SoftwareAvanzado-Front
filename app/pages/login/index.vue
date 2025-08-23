@@ -89,6 +89,12 @@ async function onSubmit() {
               @click="$router.back()"
               >Cancelar</Button
             >
+            <Button
+              variant="info"
+              to="/registro"
+            >
+              Registrarse
+            </Button>
             <Button variant="primary" :loading="loading" type="submit"
               >Entrar</Button
             >

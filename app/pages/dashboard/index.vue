@@ -22,10 +22,9 @@
           </div>
 
           <p class="text-sm text-brand-700">{{ m.description }}</p>
-
           <div
             class="mt-3 flex flex-wrap gap-1.5"
-            v-if="!(Roles.CUSTOMER in currentRoles)"
+            v-if="!(Roles.CUSTOMER === user?.roleName)"
           >
             <span
               v-for="r in m.roles"
@@ -100,7 +99,7 @@ const modules: Module[] = [
     name: "Clientes",
     description: "Historial y preferencias de clientes.",
     route: "/clientes",
-    roles: [Roles.ADMIN, Roles.CUSTOMER],
+    roles: [Roles.ADMIN],
   },
   {
     key: "reportes",
@@ -108,6 +107,41 @@ const modules: Module[] = [
     description: "KPIs, ventas y ocupación.",
     route: "/reportes",
     roles: [Roles.ADMIN],
+  },
+  {
+    key: "mis_reservaciones",
+    name: "Mis Reservaciones",
+    description: "Consulta y gestiona tus reservaciones.",
+    route: "/reservaciones/reservas",
+    roles: [Roles.CUSTOMER],
+  },
+  {
+    key: "hoteles-clientes-view",
+    name: "Ver Hoteles",
+    description: "Consulta la lista de hoteles disponibles y realiza reservas.",
+    route: "/hoteles",
+    roles: [Roles.CUSTOMER],
+  },{
+    key: "restaurantes-clientes-view",
+    name: "Ver Restaurantes",
+    description: "Consulta la lista de restaurantes disponibles y realiza reservas.",
+    route: "/restaurantes",
+    roles: [Roles.CUSTOMER],
+  },
+  {
+    key: "perfil",
+    name: "Ver Perfil",
+    description: "Consulta y edita tu perfil.",
+    route: "/perfil",
+    roles: [
+      Roles.CUSTOMER,
+      Roles.EMPLOYEE,
+      Roles.HOTEL_EMPLOYEE,
+      Roles.HOTEL_MANAGER,
+      Roles.MANAGER,
+      Roles.RESTAURANT_EMPLOYEE,
+      Roles.RESTAURANT_MANAGER
+    ],
   },
 ];
 
