@@ -13,13 +13,22 @@ export enum Roles {
   CUSTOMER = "CUSTOMER",
 }
 
-type User = { id: string; username: string; email: string; roleName: string };
+type User = {
+  id: string;
+  username: string;
+  email: string;
+  roleName: string;
+  clientId: string;
+  employeeId: string;
+};
 interface LoginResponse {
   id: string;
   username: string;
   email: string;
   roleName: string;
   token: string;
+  clientId: string;
+  employeeId: string;
 }
 
 export const useAuth = () => {
@@ -58,6 +67,8 @@ export const useAuth = () => {
       username: loginResponse.username,
       email: loginResponse.email,
       roleName: loginResponse.roleName,
+      clientId: loginResponse.clientId,
+      employeeId: loginResponse.employeeId,
     };
   };
 
