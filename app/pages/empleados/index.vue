@@ -60,6 +60,11 @@ import { useHotelService } from '~/services/hotels'
 import { useRestaurantService } from '~/services/restaurants'
 import { useUserService } from '~/services/users'
 
+
+const { redirectIfUnauthorized } = useUseRoles()
+const permitedRoles = [Roles.ADMIN, Roles.MANAGER]
+redirectIfUnauthorized(permitedRoles, '/')
+
 const toast = useToast()
 const employeeSvc = useEmployeeService()
 const hotelSvc = useHotelService()

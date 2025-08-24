@@ -24,7 +24,7 @@
           <p class="text-sm text-brand-700">{{ m.description }}</p>
           <div
             class="mt-3 flex flex-wrap gap-1.5"
-            v-if="!(Roles.CUSTOMER === user?.roleName)"
+            v-if="(Roles.ADMIN === user?.roleName || Roles.MANAGER === user?.roleName)"
           >
             <span
               v-for="r in m.roles"
@@ -95,11 +95,11 @@ const modules: Module[] = [
     roles: [Roles.ADMIN, Roles.MANAGER],
   },
   {
-    key: "clientes",
-    name: "Clientes",
-    description: "Historial y preferencias de clientes.",
-    route: "/clientes",
-    roles: [Roles.ADMIN],
+    key: "usuarios",
+    name: "Usuarios",
+    description: "Gestión de usuarios del sistema.",
+    route: "/usuarios",
+    roles: [Roles.ADMIN, Roles.MANAGER],
   },
   {
     key: "reportes",
@@ -134,8 +134,8 @@ const modules: Module[] = [
     description: "Consulta y edita tu perfil.",
     route: "/perfil",
     roles: [
+      Roles.ADMIN,
       Roles.CUSTOMER,
-      Roles.EMPLOYEE,
       Roles.HOTEL_EMPLOYEE,
       Roles.HOTEL_MANAGER,
       Roles.MANAGER,
@@ -158,9 +158,7 @@ const isAdmin = computed(() => currentRoles.value.includes(Roles.ADMIN));
 
 // Filtrado por permisos (admin ve todo)
 const visibleModules = computed(() =>
-  isAdmin.value
-    ? modules
-    : modules.filter((m) => m.roles.some((r) => currentRoles.value.includes(r)))
+  modules.filter((m) => m.roles.some((r) => currentRoles.value.includes(r)))
 );
 </script>
 

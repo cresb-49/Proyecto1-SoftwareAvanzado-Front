@@ -159,6 +159,9 @@
 </template>
 
 <script lang="ts" setup>
+definePageMeta({
+  middleware: ["auth"],
+});
 import { reactive, ref, computed, watch } from 'vue'
 import Button from '~/components/ui/Button.vue'
 import Card from '~/components/ui/Card.vue'
@@ -172,7 +175,7 @@ import { useUserService } from '~/services/users'
 import { useUseRoles } from '~/composables/useRoles'
 import { Roles } from '#imports'
 
-// Protegido: solo ADMIN / MANAGER
+
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles()
 const permitedRoles = [Roles.ADMIN, Roles.MANAGER]
 redirectIfUnauthorized(permitedRoles, '/')

@@ -47,6 +47,8 @@ export const useUserService = () => {
   const updatePassword = (data: UpdatePassword) =>
     api<User>(`${API_SEGMENT}/password`, { method: "PATCH", body: data });
 
+  const getAll = () => api<User[]>(`${API_SEGMENT}/all`, { method: "GET" });
+
   return {
     getById,
     update,
@@ -54,5 +56,6 @@ export const useUserService = () => {
     registerEmployee,
     changeState,
     updatePassword,
+    getAll,
   };
 };

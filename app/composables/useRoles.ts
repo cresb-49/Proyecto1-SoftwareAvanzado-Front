@@ -1,3 +1,8 @@
+export interface RolesRedirect {
+  roles: Array<string>;
+  redirectPath: string;
+}
+
 export const useUseRoles = () => {
   const { user } = useAuth();
 
@@ -31,5 +36,20 @@ export const useUseRoles = () => {
     return;
   };
 
-  return { hasAnyRole, redirectIfUnauthorized, redirectIfAdmin, redirectIfNotCustomer };
+  const conditionalRedirect = (rolesRedirect: RolesRedirect[]) => {
+    for (const rr of rolesRedirect) {
+      if (hasAnyRole(rr.roles)) {
+        return navigateTo(rr.redirectPath);
+      }
+    }
+    return;
+  };
+
+  return {
+    hasAnyRole,
+    redirectIfUnauthorized,
+    redirectIfAdmin,
+    redirectIfNotCustomer,
+    conditionalRedirect,
+  };
 };

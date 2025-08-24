@@ -1,19 +1,16 @@
 <template>
   <div class="mx-auto max-w-3xl px-4 py-6 space-y-8">
-    <!-- Perfil -->
-   
-    <Card
-      variant="elevated"
-      title="Mi perfil"
-      subtitle="Actualiza tu información básica"
-    >
+    <!-- Toolbar -->
+    <div class="mb-4 flex items-center justify-between">
+      <Button size="sm" variant="secondary" to="/usuarios">← Regresar</Button>
+      <div class="text-sm text-brand-700" v-if="userLabel">
+        Editando: <span class="font-medium text-brand-900">{{ userLabel }}</span>
+      </div>
+    </div>
+
+    <!-- Editar usuario -->
+    <Card variant="elevated" title="Editar usuario" subtitle="Actualiza la información básica">
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="onSaveProfile">
-        <p
-          class="sm:col-span-2 rounded-md border border-sand-300 bg-sand-100 px-3 py-2 text-xs text-burgundy-700"
-        >
-          Por seguridad, al <strong>guardar cambios de tu perfil</strong> se
-          cerrará tu sesión y serás redirigido a la página de inicio.
-        </p>
         <InputText
           v-model="profile.username"
           label="Usuario *"
@@ -55,36 +52,15 @@
         />
 
         <div class="sm:col-span-2 mt-2 flex items-center justify-end gap-2">
-          <Button
-            variant="secondary"
-            type="button"
-            @click="onRestoreProfile"
-            :disabled="savingProfile"
-            >Restaurar</Button
-          >
-          <Button variant="primary" :loading="savingProfile" type="submit"
-            >Guardar cambios</Button
-          >
+          <Button variant="secondary" type="button" @click="onRestoreProfile" :disabled="savingProfile">Restaurar</Button>
+          <Button variant="primary" :loading="savingProfile" type="submit">Guardar cambios</Button>
         </div>
       </form>
     </Card>
 
-    <!-- Password -->
-    <Card
-      variant="elevated"
-      title="Cambiar contraseña"
-      subtitle="Asegura tu cuenta con una contraseña nueva"
-    >
-      <form
-        class="grid gap-4 sm:grid-cols-2"
-        @submit.prevent="onChangePassword"
-      >
-        <p
-          class="sm:col-span-2 rounded-md border border-sand-300 bg-sand-100 px-3 py-2 text-xs text-burgundy-700"
-        >
-          Por seguridad, al <strong>cambiar tu contraseña</strong> se cerrará tu
-          sesión y serás redirigido a la página de inicio.
-        </p>
+    <!-- Cambiar contraseña (del usuario editado) -->
+    <Card variant="elevated" title="Cambiar contraseña" subtitle="Define una nueva contraseña para este usuario">
+      <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="onChangePassword">
         <InputText
           v-model="pwd.oldPassword"
           type="password"
@@ -104,9 +80,7 @@
           class="sm:col-span-2"
         />
         <div class="sm:col-span-2 mt-2 flex items-center justify-end gap-2">
-          <Button variant="primary" :loading="savingPwd" type="submit"
-            >Actualizar contraseña</Button
-          >
+          <Button variant="primary" :loading="savingPwd" type="submit">Actualizar contraseña</Button>
         </div>
       </form>
     </Card>
@@ -117,38 +91,40 @@
 definePageMeta({ middleware: ["auth"] });
 
 import { reactive, ref, computed, watchEffect } from "vue";
+import { useRoute } from 'vue-router'
 import InputText from "~/components/ui/InputText.vue";
 import Button from "~/components/ui/Button.vue";
 import Card from "~/components/ui/Card.vue";
-import { useAuth } from "~/composables/useAuth";
 import { useUserService } from "~/services/users";
 import { useToast } from "~/composables/useToast";
 import type { User, UpdatePassword } from "~/services/users";
 
 const toast = useToast();
 const users = useUserService();
-const auth = useAuth();
+const route = useRoute()
+const targetId = computed(() => String(route.params.id || ''))
 
-const { data: meData, pending: pendingMe, error: errorMe, refresh: refreshMe } = await useAsyncData(
-  () => `user:${auth.user?.value?.id ?? 'anon'}`,
-  () => auth.user.value?.id ? users.getById(String(auth.user.value?.id)) : Promise.resolve({} as User),
-  { server: true }
+// Cargar usuario por id de la ruta
+const { data: userData, pending: pendingUser, error: errorUser, refresh: refreshUser } = await useAsyncData(
+  () => `user:${targetId.value}`,
+  () => targetId.value ? users.getById(targetId.value) : Promise.resolve({} as User),
+  { watch: [targetId], server: true }
 )
-const me = computed<User>(() => (meData.value as User) || ({} as User))
+const user = computed<User>(() => (userData.value as User) || ({} as User))
+const userLabel = computed(() => user.value?.username || '')
 
+// Form state
 const profile = reactive<{
   username: string;
   email: string;
   firstNames: string;
   lastNames: string;
-  nameRole: string;
   phone: string;
 }>({
   username: "",
   email: "",
   firstNames: "",
   lastNames: "",
-  nameRole: "",
   phone: "",
 });
 
@@ -159,20 +135,19 @@ const errors = reactive<Record<string, string>>({
   email: "",
   firstNames: "",
   lastNames: "",
-  nameRole: "",
   phone: "",
 });
 const savingProfile = ref(false);
 
+// Inicializar el formulario cuando llegue la data
 const initialized = ref(false)
 watchEffect(() => {
-  const u = me.value as any
+  const u = user.value as any
   if (!initialized.value && u && u.id) {
     profile.username = u.username || ''
     profile.email = u.email || ''
     profile.firstNames = u.firstNames || ''
     profile.lastNames = u.lastNames || ''
-    profile.nameRole = u.roleName || ''
     profile.phone = u.phone || ''
     original.value = { ...profile }
     initialized.value = true
@@ -221,8 +196,6 @@ function validateProfile() {
     ? ""
     : "Debe tener 8 dígitos";
 
-  errors.nameRole = profile.nameRole ? "" : "Requerido";
-
   return Object.values(errors).every((v) => !v);
 }
 
@@ -234,7 +207,7 @@ function onRestoreProfile() {
 
 async function onSaveProfile() {
   if (!validateProfile()) return;
-  if (!me.value?.id) {
+  if (!user.value?.id) {
     toast.error('No se pudo identificar el usuario')
     return
   }
@@ -247,21 +220,18 @@ async function onSaveProfile() {
       lastNames: profile.lastNames.trim(),
       phone: profile.phone.trim(),
     };
-    const updated = await users.update(String(me.value.id), payload);
+    await users.update(String(user.value.id), payload);
     original.value = { ...profile };
-    toast.success("Perfil actualizado");
-    await auth.logout?.();
-    navigateTo("/");
-    return;
+    toast.success("Usuario actualizado");
   } catch (e: any) {
-    const msg = e?.data?.message || "No se pudo actualizar el perfil";
+    const msg = e?.data?.message || "No se pudo actualizar el usuario";
     toast.error("Error", { description: msg });
   } finally {
     savingProfile.value = false;
   }
 }
 
-// ------- Cambio de password -------
+// ------- Cambio de password (del usuario editado) -------
 const pwd = reactive<Pick<UpdatePassword, 'oldPassword'|'newPassword'>>({
   oldPassword: "",
   newPassword: "",
@@ -294,17 +264,18 @@ function validatePwd() {
 
 async function onChangePassword() {
   if (!validatePwd()) return;
+  if (!user.value?.id) {
+    toast.error('No se pudo identificar el usuario')
+    return
+  }
   try {
     savingPwd.value = true;
     await users.updatePassword({
-      userId: String(me.value.id),
+      userId: String(user.value.id),
       oldPassword: pwd.oldPassword,
       newPassword: pwd.newPassword,
     });
     toast.success("Contraseña actualizada");
-    await auth.logout?.();
-    navigateTo("/");
-    return;
   } catch (e: any) {
     const msg = e?.data?.message || "No se pudo actualizar la contraseña";
     toast.error("Error", { description: msg });
