@@ -99,6 +99,10 @@ import { useUserService } from "~/services/users";
 import { useToast } from "~/composables/useToast";
 import type { User, UpdatePassword } from "~/services/users";
 
+const { redirectIfUnauthorized } = useUseRoles()
+const permitedRoles = [Roles.ADMIN, Roles.MANAGER]
+redirectIfUnauthorized(permitedRoles, '/')
+
 const toast = useToast();
 const users = useUserService();
 const route = useRoute()
