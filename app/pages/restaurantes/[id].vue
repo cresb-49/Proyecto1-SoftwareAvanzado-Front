@@ -1,8 +1,9 @@
 <template>
   <div class="mx-auto max-w-4xl px-4 py-6">
     <!-- Top toolbar -->
-    <div class="mb-4">
+    <div class="mb-4 flex items-center justify-between">
       <Button size="sm" variant="secondary" to="/restaurantes">← Regresar</Button>
+      <Button size="sm" variant="primary" :to="`/restaurantes/menu/${id}`">Ver menú</Button>
     </div>
 
     <!-- Loading / Error -->

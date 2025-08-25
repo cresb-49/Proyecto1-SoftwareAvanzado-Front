@@ -63,23 +63,24 @@
             </p>
             <template #footer>
               <div class="flex items-center justify-between">
-                <!--<span class="text-sm text-brand-700"
-                >Desde <strong class="text-brand-900">Q650</strong>/noche</span
-              >-->
-                <Button
-                  size="sm"
-                  variant="info"
-                  :to="`/restaurantes/${restaurant.id}`"
-                  >ver</Button
-                >
-                 <Button
-                    v-if="canManageRestaurants"
+                <div class="flex items-center gap-2">
+                  <Button
                     size="sm"
-                    variant="warning"
-                    :to="`/restaurantes/editar/${restaurant.id}`"
-                  >
-                    Editar
-                  </Button>
+                    variant="info"
+                    :to="`/restaurantes/${restaurant.id}`"
+                  >Ver</Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    :to="`/restaurantes/menu/${restaurant.id}`"
+                  >Menú</Button>
+                </div>
+                <Button
+                  v-if="canManageRestaurants"
+                  size="sm"
+                  variant="warning"
+                  :to="`/restaurantes/editar/${restaurant.id}`"
+                >Editar</Button>
               </div>
             </template>
           </Card>
