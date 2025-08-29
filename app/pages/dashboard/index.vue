@@ -129,6 +129,20 @@ const modules: Module[] = [
     roles: [Roles.CUSTOMER],
   },
   {
+    key: "ordenes",
+    name: "Órdenes",
+    description: "Consulta y gestiona las órdenes.",
+    route: "/ordenes",
+    roles: [Roles.ADMIN, Roles.RESTAURANT_MANAGER,Roles.RESTAURANT_EMPLOYEE],
+  },
+  {
+    key: "mis_consumos",
+    name: "Mis Consumos",
+    description: "Consulta y gestiona tus consumos.",
+    route: "/mis_consumos",
+    roles: [Roles.CUSTOMER],
+  },
+  {
     key: "perfil",
     name: "Ver Perfil",
     description: "Consulta y edita tu perfil.",

@@ -45,8 +45,16 @@ export const useUseRoles = () => {
     return;
   };
 
+  const boolToRedirect = (condition: boolean, redirectPath: string) => {
+    if (condition) {
+      return navigateTo(redirectPath);
+    }
+    return;
+  };
+
   return {
     hasAnyRole,
+    boolToRedirect,
     redirectIfUnauthorized,
     redirectIfAdmin,
     redirectIfNotCustomer,

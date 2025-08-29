@@ -1,12 +1,9 @@
 export interface Client {
   id: string;
-  username: string;
-  email: string;
-  firstNames: string;
-  lastNames: string;
-  phone: string;
-  state: boolean;
-  roleName: string;
+  nit: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
 }
 
 const API_SEGMENT = "/v1/clients";
@@ -17,5 +14,12 @@ export const useClientService = () => {
   const getById = (id: string) =>
     api<Client>(`${API_SEGMENT}/${id}`, { method: "GET" });
   const getAll = () => api<Client[]>(API_SEGMENT, { method: "GET" });
-  return { getById, getAll };
+
+  const create = (data: any) =>
+    api<Client>(`${API_SEGMENT}/simple`, { method: "POST", body: data });
+
+  const getByNit = (nit: string) =>
+    api<Client>(`${API_SEGMENT}/nit/${nit}`, { method: "GET" });
+
+  return { getById, getAll, create, getByNit };
 };

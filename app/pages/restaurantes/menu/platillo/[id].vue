@@ -34,7 +34,7 @@
       <template #footer>
         <div class="flex items-center justify-between">
           <Button size="sm" variant="secondary" :to="backPath">Volver al menú</Button>
-          <Button size="sm" variant="warning" :to="editPath">Editar</Button>
+          <Button v-if="canManageRestaurants" size="sm" variant="warning" :to="editPath">Editar</Button>
         </div>
       </template>
     </Card>
@@ -47,6 +47,10 @@ import { useRoute } from 'vue-router'
 import Button from '~/components/ui/Button.vue'
 import Card from '~/components/ui/Card.vue'
 import { getMenuItems } from '~/services/menu-items'
+
+const { hasAnyRole } = useUseRoles();
+const permitedRoles = [Roles.ADMIN, Roles.RESTAURANT_MANAGER];
+const canManageRestaurants = computed(() => hasAnyRole(permitedRoles));
 
 const route = useRoute()
 const id = String(route.params.id)
