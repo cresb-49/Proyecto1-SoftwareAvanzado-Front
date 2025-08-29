@@ -16,8 +16,8 @@
         <Button
           size="sm"
           variant="secondary"
-          :to="`/restaurantes/menu/${restaurantId}`"
-          >← Ver menú</Button
+          :to="`/ordenes`"
+          >← Ordenes</Button
         >
       </div>
     </header>
@@ -377,7 +377,7 @@
             <div class="rounded-md border border-sand-300 bg-sand-50 p-3">
               <div class="text-xs text-brand-700">Restaurante</div>
               <div class="text-sm font-medium text-brand-900">
-                ID: {{ restaurantId }}
+                {{ restaurantData?.name }}
               </div>
             </div>
 
@@ -449,17 +449,7 @@
             </div>
           </template>
         </Card>
-      </div>
-
-      <aside class="lg:col-span-1">
-        <Card
-          variant="elevated"
-          title="Borrador (JSON)"
-          subtitle="Solo para depurar"
-        >
-          <pre class="max-h-96 overflow-auto text-xs">{{ orderDraft }}</pre>
-        </Card>
-      </aside>
+      </div> 
     </div>
   </div>
 </template>
@@ -518,6 +508,11 @@ const { data: employeeData } = await useAsyncData(
 boolToRedirect(
   (employeeData.value as any)?.restaurantId !== restaurantId && !isAdmin.value,
   "/"
+);
+
+const { data: restaurantData } = await useAsyncData(
+  () => `restaurant:${restaurantId}`,
+  () => restaurantSvc.getById(restaurantId)
 );
 
 // Cargar menú del restaurante
