@@ -62,12 +62,14 @@ const classes = computed(() =>
     props.block ? "w-full" : "",
   ].join(" ")
 );
+
+const isDisabled = computed(() => props.disabled || props.loading)
 </script>
 
 <template>
-  <template v-if="to">
+  <template v-if="to && !isDisabled">
     <NuxtLink
-      v-bind="to ? { to } : { type, disabled: disabled || loading }"
+      :to="to as any"
       :class="classes"
       :aria-busy="loading || undefined"
     >
@@ -97,7 +99,8 @@ const classes = computed(() =>
   </template>
   <template v-else>
     <button
-      v-bind="to ? { to } : { type, disabled: disabled || loading }"
+      :type="type"
+      :disabled="isDisabled"
       :class="classes"
       :aria-busy="loading || undefined"
     >

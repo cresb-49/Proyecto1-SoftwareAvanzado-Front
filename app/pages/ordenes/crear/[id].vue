@@ -706,18 +706,6 @@ function toggleConsumerFinal() {
   }
 }
 
-// Objeto de la orden (borrador)
-const orderDraft = computed(() => ({
-  restaurantId,
-  items: selectedList.value.map((it) => ({
-    menuItemId: it.id,
-    quantity: it.qty,
-  })),
-  total: total.value,
-  customerId: consumerFinal.value ? null : selectedClient.value?.id || null,
-  consumerFinal: consumerFinal.value,
-}));
-
 const creatingOrder = ref(false);
 
 function goToConfirm() {
@@ -738,13 +726,14 @@ async function onCreateOrder() {
     creatingOrder.value = true;
     const payload: CreateOrderDTO = {
       restaurantId: restaurantId,
-      nit: consumerFinal.value ? null : selectedClient.value?.nit ?? null,
+      nit: selectedClient.value?.nit ?? null,
       employeeId: user.value?.employeeId ? String(user.value.employeeId) : null,
       items: selectedList.value.map((it) => ({
         itemId: it.id,
         quantity: it.qty,
       })),
     };
+    console.log(payload);
     await orderSvc.createOrder(payload);
     toast.success("Orden creada correctamente");
     navigateTo(`/ordenes/${restaurantId}`);
