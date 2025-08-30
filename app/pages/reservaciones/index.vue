@@ -24,7 +24,7 @@
           <p v-if="!isAdmin && selectedHotelId" class="text-xs text-brand-700">Hotel asignado: {{ hotelNameById[selectedHotelId] || selectedHotelId }}</p>
         </div>
         <div class="w-60">
-          <Select
+          <Select v-if="false"
             v-model="selectedCustomerId"
             :options="customerOptions"
             label="Cliente"
@@ -33,7 +33,7 @@
             size="sm"
           />
         </div>
-        <Button size="sm" variant="secondary" @click="clearFilters"
+        <Button size="sm" variant="secondary" @click="clearFilters" v-if="false"
           >Limpiar filtros</Button
         >
         <Button v-if="canManage" size="sm" variant="primary" :to="createPath">

@@ -1,7 +1,7 @@
 export enum ReservationState {
-    CONFIRMED = 0,
-    CHECKED_IN = 1,
-    CHECKED_OUT = 2
+  CONFIRMED = 0,
+  CHECKED_IN = 1,
+  CHECKED_OUT = 2,
 }
 
 export interface Reservation {
@@ -9,23 +9,32 @@ export interface Reservation {
   hotelId: string;
   roomId: string;
   employeeId: string;
-  customerId: string;
+  nit: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  contactIDNumber: string | null;
   state: number;
   checkInDate: string; // ISO string, e.g. "2025-08-22T12:00:00Z"
   checkOutDate: string; // ISO string
   isPaid: boolean;
   total: number; // Puedes usar string si necesitas alta precisión
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
+  paidAt: string | null; // ISO string o null si no ha sido pagado
 }
 
 export interface CreateReservationRequest {
   hotelId: string;
   roomId: string;
-  customerId: string;
+  employeeId?: string; // opcional si decides enviarlo
+  nit: string | null;
   checkInDate: string; // ISO string
   checkOutDate: string; // ISO string
-  isPaid?: boolean;
-  total?: number; // calculado en el front si aplica
-  employeeId?: string; // opcional si decides enviarlo
+  contactName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  contactIDNumber: string | null;
 }
 
 const API_SEGMENT = "/v1/reservations";
