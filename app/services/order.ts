@@ -97,8 +97,8 @@ export const useOrderService = () => {
       body: data,
     });
 
-  const addItemToOrder = (orderId: string, data: AddItemOrder) =>
-    api<any>(`${API_SEGMENT}/${orderId}/add-item`, {
+  const modifyQuantityItemToOrder = (orderId: string, data: AddItemOrder) =>
+    api<any>(`${API_SEGMENT}/${orderId}/modify-item`, {
       method: "POST",
       body: data,
     });
@@ -124,7 +124,7 @@ export const useOrderService = () => {
     deleteOrder,
     cancelOrder,
     deleteItemOfOrder,
-    addItemToOrder,
+    modifyQuantityItemToOrder,
     payOrder,
   };
 };
