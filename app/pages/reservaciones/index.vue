@@ -12,7 +12,8 @@
       </div>
       <div class="flex flex-wrap items-end gap-2">
         <div class="w-60">
-          <Select v-if="isAdmin"
+          <Select
+            v-if="isAdmin"
             v-model="selectedHotelId"
             :options="hotelOptions"
             label="Hotel"
@@ -21,7 +22,10 @@
             size="sm"
             :disabled="!isAdmin"
           />
-          <p v-if="!isAdmin && selectedHotelId" class="text-xs text-brand-700">Hotel asignado: {{ hotelNameById[selectedHotelId] || selectedHotelId }}</p>
+          <p v-if="!isAdmin && selectedHotelId" class="text-xs text-brand-700">
+            Hotel asignado:
+            {{ hotelNameById[selectedHotelId] || selectedHotelId }}
+          </p>
         </div>
         <Button v-if="canManage" size="sm" variant="primary" :to="createPath">
           Crear reservación
@@ -42,13 +46,28 @@
 
       <template #cell-acciones="{ row }">
         <div class="flex items-center justify-end gap-2">
-          <Button size="sm" variant="info" :to="`/reservaciones/${row.id}`"
-            >Ver</Button
+          <Button size="sm" variant="info" :to="`/reservaciones/${row.id}`">Ver</Button>
+          <Button
+            v-if="row.isPaid"
+            size="sm"
+            variant="info"
+            :disabled="!row.isPaid"
+            :to="row.isPaid ? `/reservaciones/comprobante/${row.id}` : undefined"
+            title="Generar comprobante (factura)"
           >
-          <Button size="sm" variant="danger" @click="onDelete(row)"
-            >Eliminar</Button
-          >
+            Comprobante
+          </Button>
+          <Button v-if="!row.isPaid" size="sm" variant="danger" @click="onDelete(row)">Eliminar</Button>
         </div>
+      </template>
+
+      <template #cell-isPaid="{ row }">
+        <span
+          :class="row.isPaid ? 'bg-sage-500 text-white' : 'bg-gold-400 text-ink-900'"
+          class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
+        >
+          {{ row.isPaid ? 'Sí' : 'No' }}
+        </span>
       </template>
     </Table>
   </div>
@@ -92,15 +111,24 @@ const search = ref("");
 
 // Cargar empleado (para usuarios no ADMIN) y fijar hotel asignado
 const { data: employeeData } = await useAsyncData(
-  () => `employee:${user.value?.employeeId ?? ''}`,
-  () => (user.value?.employeeId ? employeeSvc.getById(String(user.value.employeeId)) : Promise.resolve(null)),
+  () => `employee:${user.value?.employeeId ?? ""}`,
+  () =>
+    user.value?.employeeId
+      ? employeeSvc.getById(String(user.value.employeeId))
+      : Promise.resolve(null),
   { server: true }
 );
-const employeeHotelId = computed<string | null>(() => (employeeData.value as any)?.hotelId ?? null);
+const employeeHotelId = computed<string | null>(
+  () => (employeeData.value as any)?.hotelId ?? null
+);
 
 watchEffect(() => {
   // Si no es admin, forzamos el hotel asignado
-  if (!isAdmin.value && employeeHotelId.value && selectedHotelId.value !== employeeHotelId.value) {
+  if (
+    !isAdmin.value &&
+    employeeHotelId.value &&
+    selectedHotelId.value !== employeeHotelId.value
+  ) {
     selectedHotelId.value = employeeHotelId.value;
   }
 });
@@ -124,7 +152,9 @@ const hotels = computed<any[]>(() => {
 const hotelOptions = computed(() => {
   const opts = hotels.value.map((h) => ({ label: h.name, value: h.id }));
   if (!isAdmin.value) {
-    return opts.filter((o) => !employeeHotelId.value || o.value === employeeHotelId.value);
+    return opts.filter(
+      (o) => !employeeHotelId.value || o.value === employeeHotelId.value
+    );
   }
   return opts;
 });
@@ -202,6 +232,8 @@ type Row = {
   checkInDate: any;
   checkOutDate: any;
   state: any;
+  isPaid: boolean;
+  createdAt?: any;
 };
 const mapRow = (r: any): Row => {
   const room = roomMap.value[r.roomId];
@@ -211,12 +243,16 @@ const mapRow = (r: any): Row => {
   return {
     id: r.id,
     hotelName: hotelNameById.value[r.hotelId] || r.hotelId,
-    customerName: r.nit ? `NIT - ${r.nit}` : `${r.contactName}-${r.contactIDNumber}`,
+    customerName: r.nit
+      ? `NIT - ${r.nit}`
+      : `${r.contactName}-${r.contactIDNumber}`,
     roomId: r.roomId,
     roomLabel: label,
     checkInDate: r.checkInDate,
     checkOutDate: r.checkOutDate,
     state: r.state,
+    isPaid: Boolean(r.paid),
+    createdAt: r.createdAt,
   };
 };
 
@@ -234,17 +270,25 @@ const stateText = (s: number) =>
 
 const cols: Column<Row>[] = [
   { key: "hotelName", label: "Hotel", sortable: true },
+  {
+    key: "createdAt",
+    label: "Creada",
+    format: (v) => dt.format(new Date(v)),
+    sortable: true,
+  },
   { key: "customerName", label: "Cliente", sortable: true },
   { key: "roomLabel", label: "Habitación", sortable: true },
   {
     key: "checkInDate",
     label: "Check-in",
     format: (v) => dt.format(new Date(v)),
+    sortable: true,
   },
   {
     key: "checkOutDate",
     label: "Check-out",
     format: (v) => dt.format(new Date(v)),
+    sortable: true,
   },
   {
     key: "state",
@@ -252,6 +296,7 @@ const cols: Column<Row>[] = [
     format: (v) => stateText(Number(v)),
     sortable: true,
   },
+  { key: "isPaid", label: "Pagada" },
   { key: "acciones", label: "Acciones", align: "right" },
 ];
 

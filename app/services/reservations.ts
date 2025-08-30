@@ -19,7 +19,7 @@ export interface Reservation {
   state: number;
   checkInDate: string; // ISO string, e.g. "2025-08-22T12:00:00Z"
   checkOutDate: string; // ISO string
-  isPaid: boolean;
+  paid: boolean;
   total: number; // Puedes usar string si necesitas alta precisión
   createdAt: string; // ISO string
   updatedAt: string; // ISO string
