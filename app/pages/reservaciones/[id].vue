@@ -101,6 +101,32 @@
             <h3 class="mb-1 text-sm font-medium text-brand-800">Cliente</h3>
             <p class="text-brand-900">{{ customerLabel }}</p>
           </div>
+          <!-- NIT o Contacto -->
+          <div v-if="reservation.nit" class="sm:col-span-2">
+            <h3 class="mb-1 text-sm font-medium text-brand-800">NIT</h3>
+            <p class="text-brand-900">{{ reservation.nit }}</p>
+          </div>
+          <div v-else class="sm:col-span-2">
+            <h3 class="mb-1 text-sm font-medium text-brand-800">Contacto</h3>
+            <div class="grid gap-2 sm:grid-cols-2">
+              <p class="text-brand-900">
+                <span class="font-medium">Nombre:</span>
+                {{ reservation.contactName || "—" }}
+              </p>
+              <p class="text-brand-900">
+                <span class="font-medium">Teléfono:</span>
+                {{ reservation.contactPhone || "—" }}
+              </p>
+              <p class="text-brand-900 sm:col-span-2">
+                <span class="font-medium">Correo:</span>
+                {{ reservation.contactEmail || "—" }}
+              </p>
+              <p class="text-brand-900 sm:col-span-2">
+                <span class="font-medium">Documento:</span>
+                {{ reservation.contactIDNumber || "—" }}
+              </p>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -205,9 +231,11 @@ const roomLabel = computed(() => {
     Number.isFinite(price) ? currency.format(price) : "s/t"
   }`;
 });
-const customerLabel = computed(
-  () => reservation.value?.customerName || reservation.value?.customerId || "—"
-);
+const customerLabel = computed(() => {
+  const r: any = reservation.value;
+  if (!r) return "—";
+  return r.nit ? `NIT ${r.nit}` : "Consumidor final";
+});
 
 // Fechas y estado
 const dt = new Intl.DateTimeFormat("es-GT", {

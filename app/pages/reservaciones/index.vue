@@ -23,19 +23,6 @@
           />
           <p v-if="!isAdmin && selectedHotelId" class="text-xs text-brand-700">Hotel asignado: {{ hotelNameById[selectedHotelId] || selectedHotelId }}</p>
         </div>
-        <div class="w-60">
-          <Select v-if="false"
-            v-model="selectedCustomerId"
-            :options="customerOptions"
-            label="Cliente"
-            placeholder="Todos los clientes"
-            clearable
-            size="sm"
-          />
-        </div>
-        <Button size="sm" variant="secondary" @click="clearFilters" v-if="false"
-          >Limpiar filtros</Button
-        >
         <Button v-if="canManage" size="sm" variant="primary" :to="createPath">
           Crear reservación
         </Button>
@@ -148,21 +135,6 @@ const hotelNameById = computed<Record<string, string>>(() =>
   }, {})
 );
 
-// Clientes (fake mientras se implementa servicio real)
-const customerOptions = ref([
-  { value: "b7b7f1b6-1f75-4d01-9e3e-1b8d5b1a1111", label: "María López" },
-  { value: "0f3e2d9a-2a44-4b55-8c1a-9dc7f2a22222", label: "Juan Pérez" },
-  { value: "9a8b7c6d-3e21-4f43-9c0b-2e1f3d3a33333", label: "Ana García" },
-  { value: "1c2d3e4f-4a5b-6c7d-8e9f-0a1b2c3d44444", label: "Carlos Ruiz" },
-  { value: "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f55555", label: "Sofía Martínez" },
-]);
-const customerNameById = computed<Record<string, string>>(() =>
-  customerOptions.value.reduce((acc: Record<string, string>, c: any) => {
-    acc[c.value] = c.label;
-    return acc;
-  }, {})
-);
-
 // Cargar reservaciones según los filtros (3 endpoints distintos)
 const {
   data: reservationsData,
@@ -239,7 +211,7 @@ const mapRow = (r: any): Row => {
   return {
     id: r.id,
     hotelName: hotelNameById.value[r.hotelId] || r.hotelId,
-    customerName: customerNameById.value[r.customerId] || r.customerId,
+    customerName: r.nit ? `NIT - ${r.nit}` : `${r.contactName}-${r.contactIDNumber}`,
     roomId: r.roomId,
     roomLabel: label,
     checkInDate: r.checkInDate,
