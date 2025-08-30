@@ -158,18 +158,20 @@
         </div>
 
         <!-- Habitación (depende de hotel) -->
-        <div class="sm:col-span-2">
-          <Select
-            v-model="form.roomId"
-            :options="roomOptions"
-            label="Habitación *"
-            placeholder="Selecciona una habitación…"
-            :disabled="!form.hotelId"
-            :error="errors.roomId"
-            size="md"
-            clearable
-          />
-        </div>
+        <Select
+          v-model="form.roomId"
+          :options="roomOptions"
+          label="Habitación *"
+          :placeholder="
+            availabilityChecked
+              ? 'Selecciona una habitación…'
+              : 'Verifica disponibilidad primero…'
+          "
+          :disabled="!availabilityChecked || !roomOptions?.length"
+          :error="errors.roomId"
+          size="md"
+          clearable
+        />
 
         <!-- Empleado (auto del usuario o manual si falta) -->
         <div class="sm:col-span-2">
@@ -215,6 +217,25 @@
           />
         </div>
 
+        <!-- Disponibilidad -->
+        <div class="sm:col-span-2 flex items-center gap-2">
+          <Button
+            variant="info"
+            size="sm"
+            @click="onCheckAvailability"
+            :loading="checkingAvailability"
+          >
+            Verificar disponibilidad
+          </Button>
+          <span v-if="availabilityChecked" class="text-sm text-brand-700">
+            {{
+              roomOptions.length
+                ? `${roomOptions.length} habitación(es) disponibles`
+                : "Sin disponibilidad"
+            }}
+          </span>
+        </div>
+
         <!-- Resumen -->
         <div class="sm:col-span-2 text-sm text-brand-700">
           <p>
@@ -247,7 +268,6 @@ import { reactive, ref, computed, watch, watchEffect } from "vue";
 import { useUseRoles } from "~/composables/useRoles";
 import { Roles, useAuth } from "#imports";
 import { useHotelService } from "~/services/hotels";
-import { useRoomService } from "~/services/rooms";
 import { useReservationService } from "~/services/reservations";
 import { useClientService } from "~/services/client";
 import { useToast } from "~/composables/useToast";
@@ -294,7 +314,6 @@ boolToRedirect(
 
 const toast = useToast();
 const hotelService = useHotelService();
-const roomService = useRoomService();
 const reservationService = useReservationService();
 const clientService = useClientService();
 const foundClient = ref<any | null>(null);
@@ -376,18 +395,11 @@ const hotelOptions = computed(() => {
   return items.map((h: any) => ({ label: h.name, value: h.id }));
 });
 
-// Rooms por hotel
-const { data: roomsData, refresh: refreshRooms } = await useAsyncData(
-  () => `rooms:by-hotel:${String(form.hotelId || "")}`,
-  () =>
-    form.hotelId
-      ? roomService.getByHotel(String(form.hotelId))
-      : Promise.resolve([]),
-  { watch: [() => form.hotelId] }
-);
+// Habitaciones disponibles (tras verificar disponibilidad)
+const availableRoomsList = ref<any[]>([]);
 const roomOptions = computed(() => {
-  const rooms = (roomsData.value || []) as any[];
-  return rooms.map((r) => ({
+  const rooms = availableRoomsList.value || [];
+  return rooms.map((r: any) => ({
     label: `#${r.number} — ${formatCurrency(Number(r.price))}`,
     value: r.id,
     price: Number(r.price),
@@ -411,12 +423,72 @@ const nights = computed(() => {
   return diff >= 0 ? Math.floor(diff) : 0;
 });
 
+watch(
+  [() => form.hotelId, () => form.checkInDate, () => form.checkOutDate],
+  () => {
+    availabilityChecked.value = false;
+    availableRoomsList.value = [];
+    form.roomId = null;
+  }
+);
+
 // Helpers
 const currency = new Intl.NumberFormat("es-GT", {
   style: "currency",
   currency: "GTQ",
 });
 const formatCurrency = (n: number) => currency.format(n || 0);
+
+const availabilityChecked = ref(false);
+const checkingAvailability = ref(false);
+
+async function onCheckAvailability() {
+  // Validaciones mínimas
+  if (!form.hotelId) {
+    errors.hotelId = "Requerido";
+    toast.error("Selecciona un hotel");
+    return;
+  }
+  if (!form.checkInDate) {
+    errors.checkInDate = "Requerido";
+    return;
+  }
+  if (!form.checkOutDate) {
+    errors.checkOutDate = "Requerido";
+    return;
+  }
+  const start = new Date(String(form.checkInDate));
+  const end = new Date(String(form.checkOutDate));
+  if (start.getTime() > end.getTime()) {
+    errors.checkOutDate = "Debe ser igual o posterior al check-in";
+    toast.error("Rango de fechas inválido");
+    return;
+  }
+  try {
+    checkingAvailability.value = true;
+    form.roomId = null;
+    availabilityChecked.value = false;
+    availableRoomsList.value = [];
+    const rooms = await reservationService.availableRooms(
+      String(form.hotelId),
+      start.toISOString(),
+      end.toISOString()
+    );
+    availableRoomsList.value = Array.isArray(rooms) ? rooms : [];
+    availabilityChecked.value = true;
+    if (!availableRoomsList.value.length) {
+      toast.info("No hay habitaciones disponibles para ese rango.");
+    } else {
+      toast.success(
+        `Habitaciones disponibles: ${availableRoomsList.value.length}`
+      );
+    }
+  } catch (e: any) {
+    toast.error(e?.data?.message || "No se pudo verificar disponibilidad");
+  } finally {
+    checkingAvailability.value = false;
+  }
+}
 
 async function lookupByNit() {
   if (!form.nit) {
@@ -443,7 +515,10 @@ async function lookupByNit() {
 }
 
 function createClient() {
-  if (!form.nit) { errors.nit = 'Requerido'; return; }
+  if (!form.nit) {
+    errors.nit = "Requerido";
+    return;
+  }
   showCreateForm.value = true;
 }
 
@@ -494,7 +569,11 @@ function isEmailValid(email: string) {
 
 function validate() {
   errors.hotelId = form.hotelId ? "" : "Requerido";
-  errors.roomId = form.roomId ? "" : "Requerido";
+  errors.roomId = form.roomId
+    ? ""
+    : availabilityChecked.value
+    ? "Requerido"
+    : "Verifica disponibilidad";
   const emp = currentEmployeeId.value ?? form.employeeId;
   errors.employeeId = emp ? "" : "Requerido";
 

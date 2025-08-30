@@ -1,3 +1,5 @@
+import type { Room } from "./rooms";
+
 export enum ReservationState {
   CONFIRMED = 0,
   CHECKED_IN = 1,
@@ -85,6 +87,16 @@ export const useReservationService = () => {
       method: "GET",
     });
 
+  const availableRooms = (
+    hotelId: string,
+    checkInDate: string,
+    checkOutDate: string
+  ) =>
+    api<Room[]>(`${API_SEGMENT}/availability/hotel/${hotelId}`, {
+      method: "POST",
+      body: { startDate: checkInDate, endDate: checkOutDate },
+    });
+
   return {
     create,
     getById,
@@ -96,5 +108,6 @@ export const useReservationService = () => {
     reservationsByCustomer,
     reservationsByHotel,
     reservationsByCustomerAndHotel,
+    availableRooms,
   };
 };
