@@ -150,6 +150,7 @@ import { useHotelService } from "~/services/hotels";
 import { useRoomService } from "~/services/rooms";
 import { useReservationService } from "~/services/reservations";
 import { useToast } from "~/composables/useToast";
+import { useEmployeeService } from "~/services/employee";
 
 import Button from "~/components/ui/Button.vue";
 import Card from "~/components/ui/Card.vue";
@@ -157,19 +158,45 @@ import Select from "~/components/ui/Select.vue";
 import InputDate from "~/components/ui/InputDate.vue";
 import InputText from "~/components/ui/InputText.vue";
 
-const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
-const permitedRoles = [Roles.ADMIN, Roles.HOTEL_MANAGER, Roles.CUSTOMER];
+const route = useRoute();
+const { user } = useAuth();
+
+const { hasAnyRole, redirectIfUnauthorized, boolToRedirect } = useUseRoles();
+const permitedRoles = [
+  Roles.ADMIN,
+  Roles.HOTEL_MANAGER,
+  Roles.CUSTOMER,
+  Roles.HOTEL_EMPLOYEE,
+];
+
+const hotelId = String(route.query.hotelId);
+
 const canManage = computed(() => hasAnyRole(permitedRoles));
+const isAdmin = computed(() => hasAnyRole([Roles.ADMIN]));
+const isCustomer = computed(() => hasAnyRole([Roles.CUSTOMER]));
+const isHotelEmployee = computed(() =>
+  hasAnyRole([Roles.HOTEL_EMPLOYEE, Roles.HOTEL_MANAGER])
+);
 redirectIfUnauthorized(permitedRoles, "/");
+const employeeSvc = useEmployeeService();
+const { data: employeeData } = await useAsyncData(
+  () => `employee:${user.value?.employeeId ?? ""}`,
+  () =>
+    user.value?.employeeId
+      ? employeeSvc.getById(String(user.value.employeeId))
+      : Promise.resolve(null)
+);
+boolToRedirect(
+  employeeData.value?.hotelId !== hotelId && isHotelEmployee.value,
+  "/"
+);
 
 const toast = useToast();
 const hotelService = useHotelService();
 const roomService = useRoomService();
 const reservationService = useReservationService();
-const route = useRoute();
 
 // Empleado actual (desde auth)
-const { user } = useAuth();
 const currentEmployeeId = computed<string | null>(() => {
   const u: any = user?.value;
   return (u?.employeeId || u?.id || null) as string | null;
@@ -275,7 +302,9 @@ const currency = new Intl.NumberFormat("es-GT", {
 });
 const formatCurrency = (n: number) => currency.format(n || 0);
 const cancelPath = computed(() =>
-  user.value?.roleName === Roles.CUSTOMER ? "/reservaciones/reservas" : "/reservaciones"
+  user.value?.roleName === Roles.CUSTOMER
+    ? "/reservaciones/reservas"
+    : "/reservaciones"
 );
 
 function validate() {

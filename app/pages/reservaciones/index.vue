@@ -12,14 +12,16 @@
       </div>
       <div class="flex flex-wrap items-end gap-2">
         <div class="w-60">
-          <Select
+          <Select v-if="isAdmin"
             v-model="selectedHotelId"
             :options="hotelOptions"
             label="Hotel"
             placeholder="Todos los hoteles"
             clearable
             size="sm"
+            :disabled="!isAdmin"
           />
+          <p v-if="!isAdmin && selectedHotelId" class="text-xs text-brand-700">Hotel asignado: {{ hotelNameById[selectedHotelId] || selectedHotelId }}</p>
         </div>
         <div class="w-60">
           <Select
@@ -34,12 +36,7 @@
         <Button size="sm" variant="secondary" @click="clearFilters"
           >Limpiar filtros</Button
         >
-        <Button
-          v-if="canManage"
-          size="sm"
-          variant="primary"
-          :to="createPath"
-        >
+        <Button v-if="canManage" size="sm" variant="primary" :to="createPath">
           Crear reservación
         </Button>
       </div>
@@ -73,7 +70,7 @@
 <script lang="ts" setup>
 definePageMeta({ middleware: ["auth"] });
 
-import { ref, computed } from "vue";
+import { ref, computed, watchEffect } from "vue";
 import Button from "~/components/ui/Button.vue";
 import Table, { type Column } from "~/components/ui/Table.vue";
 import Select from "~/components/ui/Select.vue";
@@ -83,9 +80,15 @@ import { useToast } from "~/composables/useToast";
 import { useRoomService } from "~/services/rooms";
 import { Roles } from "#imports";
 import { useUseRoles } from "~/composables/useRoles";
+import { useAuth } from "~/composables/useAuth";
+import { useEmployeeService } from "~/services/employee";
+import { useClientService } from "~/services/client";
 
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
-const permitedRoles = [Roles.ADMIN, Roles.HOTEL_MANAGER];
+const { user } = useAuth();
+const isAdmin = computed(() => hasAnyRole([Roles.ADMIN]));
+const employeeSvc = useEmployeeService();
+const permitedRoles = [Roles.ADMIN, Roles.HOTEL_MANAGER, Roles.HOTEL_EMPLOYEE];
 const canManage = computed(() => hasAnyRole(permitedRoles));
 redirectIfUnauthorized(permitedRoles, "/");
 
@@ -94,11 +97,26 @@ const reservationsSvc = useReservationService();
 const hotelsSvc = useHotelService();
 const roomService = useRoomService();
 
-// Filtros
+// Filtros (declarar antes de watchers que los usan)
 const selectedHotelId = ref<string | null>(null);
 const selectedCustomerId = ref<string | null>(null);
 const page = ref(1);
 const search = ref("");
+
+// Cargar empleado (para usuarios no ADMIN) y fijar hotel asignado
+const { data: employeeData } = await useAsyncData(
+  () => `employee:${user.value?.employeeId ?? ''}`,
+  () => (user.value?.employeeId ? employeeSvc.getById(String(user.value.employeeId)) : Promise.resolve(null)),
+  { server: true }
+);
+const employeeHotelId = computed<string | null>(() => (employeeData.value as any)?.hotelId ?? null);
+
+watchEffect(() => {
+  // Si no es admin, forzamos el hotel asignado
+  if (!isAdmin.value && employeeHotelId.value && selectedHotelId.value !== employeeHotelId.value) {
+    selectedHotelId.value = employeeHotelId.value;
+  }
+});
 
 const createPath = computed(() =>
   selectedHotelId.value
@@ -116,9 +134,13 @@ const hotels = computed<any[]>(() => {
   const val = hotelsData.value as any;
   return Array.isArray(val) ? val : val?.items || [];
 });
-const hotelOptions = computed(() =>
-  hotels.value.map((h) => ({ label: h.name, value: h.id }))
-);
+const hotelOptions = computed(() => {
+  const opts = hotels.value.map((h) => ({ label: h.name, value: h.id }));
+  if (!isAdmin.value) {
+    return opts.filter((o) => !employeeHotelId.value || o.value === employeeHotelId.value);
+  }
+  return opts;
+});
 const hotelNameById = computed<Record<string, string>>(() =>
   hotels.value.reduce((acc: Record<string, string>, h: any) => {
     acc[h.id] = h.name;
@@ -252,7 +274,12 @@ const cols: Column<Row>[] = [
     label: "Check-out",
     format: (v) => dt.format(new Date(v)),
   },
-  { key: "state", label: "Estado", format: (v) => stateText(Number(v)), sortable: true },
+  {
+    key: "state",
+    label: "Estado",
+    format: (v) => stateText(Number(v)),
+    sortable: true,
+  },
   { key: "acciones", label: "Acciones", align: "right" },
 ];
 
