@@ -8,22 +8,33 @@ export interface Hotel {
   rating: number;
 }
 
-export interface CreateHotelRequest {}
+export interface HotelReview {
+  id: string;
+  hotelId: string;
+  userId: string;
+  review: string;
+  rating: number;
+  createdAt: string;
+}
 
-export interface UpdateHotelRequest {}
+export interface CreateHotelReview {
+  hotelId: string;
+  review: string;
+  rating: number;
+}
 
 const API_SEGMENT = "/v1/hotels";
 
 export const useHotelService = () => {
   const api = useApi();
 
-  const create = (hotel: CreateHotelRequest) =>
+  const create = (hotel: any) =>
     api<Hotel>(API_SEGMENT, { method: "POST", body: hotel });
 
   const getById = (hotel: string) =>
     api<Hotel>(`${API_SEGMENT}/${hotel}`, { method: "GET" });
 
-  const update = (hotel: string, data: UpdateHotelRequest) =>
+  const update = (hotel: string, data: any) =>
     api<Hotel>(`${API_SEGMENT}/${hotel}`, { method: "PUT", body: data });
 
   const deleteRestaurant = (hotel: string) =>
@@ -48,6 +59,24 @@ export const useHotelService = () => {
       body: { ids: restaurantIds },
     });
 
+  // reviews
+  const createHotelReview = (review: CreateHotelReview) =>
+    api<HotelReview>(`${API_SEGMENT}/reviews`, {
+      method: "POST",
+      body: review,
+    });
+
+  const deleteHotelReview = (reviewId: string) =>
+    api<void>(`${API_SEGMENT}/reviews/${reviewId}`, { method: "DELETE" });
+
+  const getHotelReviews = (hotelId: string) =>
+    api<HotelReview[]>(`${API_SEGMENT}/reviews/hotel/${hotelId}`, {
+      method: "GET",
+    });
+
+  const getReviewById = (reviewId: string) =>
+    api<HotelReview>(`${API_SEGMENT}/reviews/${reviewId}`, { method: "GET" });
+
   return {
     getById,
     create,
@@ -57,5 +86,9 @@ export const useHotelService = () => {
     getByIds,
     getByRestaurant,
     getByRestaurantIds,
+    getHotelReviews,
+    getReviewById,
+    createHotelReview,
+    deleteHotelReview,
   };
 };
