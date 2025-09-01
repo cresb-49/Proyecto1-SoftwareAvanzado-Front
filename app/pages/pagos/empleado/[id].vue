@@ -11,6 +11,42 @@
       </div>
     </header>
 
+    <!-- Resumen del empleado -->
+    <Card variant="elevated" title="Empleado" subtitle="Datos para confirmar">
+      <div v-if="pendingEmp" class="text-brand-700">Cargando empleado…</div>
+      <div v-else-if="errorEmp" class="text-terra-500">No se pudo cargar la información del empleado.</div>
+      <div v-else class="grid gap-3 sm:grid-cols-2 text-sm">
+        <div>
+          <div class="text-brand-700">Usuario</div>
+          <div class="font-medium text-brand-900">{{ userLabel || '—' }}</div>
+        </div>
+        <div>
+          <div class="text-brand-700">Nombre</div>
+          <div class="font-medium text-brand-900">{{ fullName }}</div>
+        </div>
+        <div>
+          <div class="text-brand-700">Teléfono</div>
+          <div class="font-medium text-brand-900">{{ userPhone }}</div>
+        </div>
+        <div>
+          <div class="text-brand-700">Rol</div>
+          <div class="font-medium text-brand-900">{{ userRole }}</div>
+        </div>
+        <div>
+          <div class="text-brand-700">Hotel</div>
+          <div class="font-medium text-brand-900">{{ hotelName }}</div>
+        </div>
+        <div>
+          <div class="text-brand-700">Restaurante</div>
+          <div class="font-medium text-brand-900">{{ restaurantName }}</div>
+        </div>
+        <div class="sm:col-span-2">
+          <div class="text-brand-700">Salario semanal</div>
+          <div class="font-semibold text-brand-900">{{ salaryDisplay }}</div>
+        </div>
+      </div>
+    </Card>
+
     <!-- Tabla de pagos -->
     <Card variant="elevated" title="Historial de pagos" subtitle="Pagos semanales registrados">
       <div v-if="pending" class="text-brand-700">Cargando pagos…</div>
@@ -71,6 +107,10 @@ import Card from '~/components/ui/Card.vue'
 import { useWeeklyPaymentService } from '~/services/weekly-payments'
 import type { WeeklyPayment } from '~/services/weekly-payments'
 import { useToast } from '~/composables/useToast'
+import { useEmployeeService } from '~/services/employee'
+import { useUserService } from '~/services/users'
+import { useHotelService } from '~/services/hotels'
+import { useRestaurantService } from '~/services/restaurants'
 
 definePageMeta({ middleware: ['auth'] })
 
@@ -81,7 +121,78 @@ const svc = useWeeklyPaymentService()
 
 const employeeId = computed(() => String(route.params.id || ''))
 
-// Cargar pagos por empleado
+// ====== Datos del empleado (para mostrar información) ======
+const empSvc = useEmployeeService()
+const userSvc = useUserService()
+const hotelSvc = useHotelService()
+const restaurantSvc = useRestaurantService()
+
+// Cargar empleado base
+const { data: empData, pending: pendingEmp, error: errorEmp } = await useAsyncData(
+  () => `employee:${employeeId.value}`,
+  () => employeeId.value ? empSvc.getById(employeeId.value) : Promise.resolve(null),
+  { watch: [employeeId] }
+)
+
+// Dependientes
+const { data: userData } = await useAsyncData(
+  () => `employee:user:${(empData.value as any)?.userId || ''}`,
+  () => (empData.value as any)?.userId ? userSvc.getById(String((empData.value as any).userId)) : Promise.resolve(null),
+  { watch: [empData] }
+)
+const { data: hotelData } = await useAsyncData(
+  () => `employee:hotel:${(empData.value as any)?.hotelId || ''}`,
+  () => (empData.value as any)?.hotelId ? hotelSvc.getById(String((empData.value as any).hotelId)) : Promise.resolve(null),
+  { watch: [empData] }
+)
+const { data: restaurantData } = await useAsyncData(
+  () => `employee:restaurant:${(empData.value as any)?.restaurantId || ''}`,
+  () => (empData.value as any)?.restaurantId ? restaurantSvc.getById(String((empData.value as any).restaurantId)) : Promise.resolve(null),
+  { watch: [empData] }
+)
+
+// Labels calculados
+const userLabel = computed(() => {
+  const u: any = userData.value
+  if (!u) return ''
+  return `${u.username || ''}`.trim()
+})
+const userRole = computed(() => (userData.value as any)?.roleName || '—')
+const fullName = computed(() => {
+  const u: any = userData.value || {}
+  const fn = (u.firstNames || '').trim()
+  const ln = (u.lastNames || '').trim()
+  return (fn || ln) ? `${fn} ${ln}`.trim() : '—'
+})
+const userPhone = computed(() => (userData.value as any)?.phone || '—')
+const hotelName = computed(() => (hotelData.value as any)?.name || '—')
+const restaurantName = computed(() => (restaurantData.value as any)?.name || '—')
+
+// Utilidades de formato
+const dt = new Intl.DateTimeFormat('es-GT', { dateStyle: 'medium', timeStyle: 'short' })
+const dOnly = new Intl.DateTimeFormat('es-GT', { dateStyle: 'medium' })
+const currency = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
+
+function formatDateTime(v?: string | null) {
+  if (!v) return '—'
+  const d = new Date(v)
+  return isNaN(d.getTime()) ? '—' : dt.format(d)
+}
+
+function formatYMD(v?: string | null) {
+  if (!v) return '—'
+  // weekStart puede venir como 'YYYY-MM-DD' o LocalDateTime
+  const d = v.length > 10 ? new Date(v) : new Date(`${v}T00:00:00`)
+  return isNaN(d.getTime()) ? v : dOnly.format(d)
+}
+
+function formatCurrency(n: number | string | null | undefined) {
+  return currency.format(Number(n || 0))
+}
+
+const salaryDisplay = computed(() => formatCurrency((empData.value as any)?.semanalSalary || 0))
+
+// ====== Pagos por empleado ======
 const { data, pending, error, refresh } = await useAsyncData(
   () => `weekly-payments:employee:${employeeId.value}`,
   () => employeeId.value ? svc.getPaymentsByEmployee(employeeId.value) : Promise.resolve([] as WeeklyPayment[]),
@@ -105,28 +216,6 @@ async function onPayById(id: string) {
   } finally {
     payingId.value = null
   }
-}
-
-// Utilidades de formato
-const dt = new Intl.DateTimeFormat('es-GT', { dateStyle: 'medium', timeStyle: 'short' })
-const dOnly = new Intl.DateTimeFormat('es-GT', { dateStyle: 'medium' })
-const currency = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' })
-
-function formatDateTime(v?: string | null) {
-  if (!v) return '—'
-  const d = new Date(v)
-  return isNaN(d.getTime()) ? '—' : dt.format(d)
-}
-
-function formatYMD(v?: string | null) {
-  if (!v) return '—'
-  // weekStart puede venir como 'YYYY-MM-DD' o LocalDateTime
-  const d = v.length > 10 ? new Date(v) : new Date(`${v}T00:00:00`)
-  return isNaN(d.getTime()) ? v : dOnly.format(d)
-}
-
-function formatCurrency(n: number | string | null | undefined) {
-  return currency.format(Number(n || 0))
 }
 
 function goBack() {
