@@ -24,7 +24,9 @@
           <p class="text-sm text-brand-700">{{ m.description }}</p>
           <div
             class="mt-3 flex flex-wrap gap-1.5"
-            v-if="(Roles.ADMIN === user?.roleName || Roles.MANAGER === user?.roleName)"
+            v-if="
+              Roles.ADMIN === user?.roleName || Roles.MANAGER === user?.roleName
+            "
           >
             <span
               v-for="r in m.roles"
@@ -66,6 +68,13 @@ interface Module {
 
 // 🔧 Configuración de módulos (agrega/edita aquí)
 const modules: Module[] = [
+  {
+    key: "Pagos",
+    name: "Pagos",
+    description: "Gestión de pagos semanales.",
+    route: "/pagos",
+    roles: [Roles.ADMIN, Roles.MANAGER],
+  },
   {
     key: "hoteles",
     name: "Hoteles",
@@ -121,10 +130,12 @@ const modules: Module[] = [
     description: "Consulta la lista de hoteles disponibles y realiza reservas.",
     route: "/hoteles",
     roles: [Roles.CUSTOMER],
-  },{
+  },
+  {
     key: "restaurantes-clientes-view",
     name: "Ver Restaurantes",
-    description: "Consulta la lista de restaurantes disponibles y realiza reservas.",
+    description:
+      "Consulta la lista de restaurantes disponibles y realiza reservas.",
     route: "/restaurantes",
     roles: [Roles.CUSTOMER],
   },
@@ -133,7 +144,7 @@ const modules: Module[] = [
     name: "Órdenes",
     description: "Consulta y gestiona las órdenes.",
     route: "/ordenes",
-    roles: [Roles.ADMIN, Roles.RESTAURANT_MANAGER,Roles.RESTAURANT_EMPLOYEE],
+    roles: [Roles.ADMIN, Roles.RESTAURANT_MANAGER, Roles.RESTAURANT_EMPLOYEE],
   },
   {
     key: "mis_consumos",
@@ -154,7 +165,7 @@ const modules: Module[] = [
       Roles.HOTEL_MANAGER,
       Roles.MANAGER,
       Roles.RESTAURANT_EMPLOYEE,
-      Roles.RESTAURANT_MANAGER
+      Roles.RESTAURANT_MANAGER,
     ],
   },
 ];
