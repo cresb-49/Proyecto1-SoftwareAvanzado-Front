@@ -247,7 +247,7 @@
                     </div>
                     <div class="text-right text-xs text-brand-700">
                       <div>{{ formatDate(r.createdAt) }}</div>
-                      <div v-if="String(r.userId) === String(userId)" class="mt-2">
+                      <div v-if="String(r.userId) === String(userId) || canManageHotels" class="mt-2">
                         <Button
                           size="sm"
                           variant="danger"
