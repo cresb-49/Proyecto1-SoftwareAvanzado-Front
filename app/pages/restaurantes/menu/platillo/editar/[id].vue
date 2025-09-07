@@ -52,6 +52,19 @@
           <p class="mt-1 text-xs text-brand-700">Mínimo Q0.01, hasta 10 enteros y 2 decimales.</p>
         </div>
 
+        <!-- Costo -->
+        <div class="sm:col-span-2">
+          <InputCurrency
+            v-model="form.cost"
+            label="Costo *"
+            currency="GTQ"
+            locale="es-GT"
+            :error="errors.cost"
+            size="md"
+          />
+          <p class="mt-1 text-xs text-brand-700">Mínimo Q0.01, hasta 10 enteros y 2 decimales.</p>
+        </div>
+
         <!-- Acciones -->
         <div class="sm:col-span-2 mt-2 flex items-center justify-end gap-2">
           <Button variant="secondary" type="button" @click="onRestore" :disabled="saving">Restaurar</Button>
@@ -99,10 +112,11 @@ const restaurantName = computed<string>(() => item.value?.restaurant?.name || ''
 const backPath = computed(() => restaurantId.value ? `/restaurantes/menu/${restaurantId.value}` : '/restaurantes')
 
 // Form state
-const form = reactive<{ name: string; description: string; price: number | null }>({
+const form = reactive<{ name: string; description: string; price: number | null; cost: number | null }>({
   name: '',
   description: '',
   price: null,
+  cost: null,
 })
 const original = ref<any>(null)
 
@@ -114,12 +128,13 @@ watchEffect(() => {
     form.name = it.name || ''
     form.description = it.description || ''
     form.price = Number(it.price ?? 0)
+    form.cost = Number((it as any).cost ?? 0)
     original.value = { ...form }
     initialized.value = true
   }
 })
 
-const errors = reactive<Record<string, string>>({ name: '', description: '', price: '' })
+const errors = reactive<Record<string, string>>({ name: '', description: '', price: '', cost: '' })
 const saving = ref(false)
 
 function validate() {
@@ -136,6 +151,12 @@ function validate() {
   const validNumber = Number.isFinite(s) && s >= 0.01
   const twoDecimals = /^\d{1,10}(\.\d{1,2})?$/.test(String(form.price ?? ''))
   errors.price = validNumber && twoDecimals ? '' : 'Precio inválido (mín. 0.01 y 2 decimales)'
+
+  // cost >= 0.01, hasta 10 enteros y 2 decimales
+  const c = Number(form.cost)
+  const validCost = Number.isFinite(c) && c >= 0.01
+  const costTwoDecimals = /^\d{1,10}(\.\d{1,2})?$/.test(String(form.cost ?? ''))
+  errors.cost = validCost && costTwoDecimals ? '' : 'Costo inválido (mín. 0.01 y 2 decimales)'
 
   return Object.values(errors).every(v => !v)
 }
@@ -158,6 +179,7 @@ async function onSubmit() {
       name: form.name.trim(),
       description: form.description.trim(),
       price: Number(form.price),
+      cost: Number(form.cost),
       restaurantId: restaurantId.value, // Nota: no editable
     })
     toast.success('Platillo actualizado')
