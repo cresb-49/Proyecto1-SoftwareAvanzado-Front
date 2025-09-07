@@ -113,7 +113,7 @@ export interface EmployeeDetail {
   firstName: string;
   lastName: string;
   roleName: string;
-  isActive: boolean;
+  active: boolean;
   salary: number;
 }
 
