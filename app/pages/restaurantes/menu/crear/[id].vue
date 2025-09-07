@@ -47,6 +47,19 @@
           <p class="mt-1 text-xs text-brand-700">Mínimo Q0.01, hasta 10 enteros y 2 decimales.</p>
         </div>
 
+        <!-- Costo -->
+        <div class="sm:col-span-2">
+          <InputCurrency
+            v-model="form.cost"
+            label="Costo *"
+            currency="GTQ"
+            locale="es-GT"
+            :error="errors.cost"
+            size="md"
+          />
+          <p class="mt-1 text-xs text-brand-700">Mínimo Q0.01, hasta 10 enteros y 2 decimales.</p>
+        </div>
+
         <!-- Acciones -->
         <div class="sm:col-span-2 mt-2 flex items-center justify-end gap-2">
           <Button variant="secondary" type="button" @click="onReset" :disabled="saving">Limpiar</Button>
@@ -91,13 +104,14 @@ const restaurantName = computed(() => (restData.value as any)?.name || '')
 const menuApi = getMenuItems()
 
 // Form state
-const form = reactive<{ name: string; description: string; price: number | null }>({
+const form = reactive<{ name: string; description: string; price: number | null; cost: number | null }>({
   name: '',
   description: '',
   price: null,
+  cost: null,
 })
 
-const errors = reactive<Record<string, string>>({ name: '', description: '', price: '' })
+const errors = reactive<Record<string, string>>({ name: '', description: '', price: '', cost: '' })
 const saving = ref(false)
 
 function validate() {
@@ -115,6 +129,12 @@ function validate() {
   const twoDecimals = /^\d{1,10}(\.\d{1,2})?$/.test(String(form.price ?? ''))
   errors.price = validNumber && twoDecimals ? '' : 'Precio inválido (mín. 0.01 y 2 decimales)'
 
+  // cost >= 0.01, hasta 10 enteros y 2 decimales
+  const c = Number(form.cost)
+  const validCost = Number.isFinite(c) && c >= 0.01
+  const costTwoDecimals = /^\d{1,10}(\.\d{1,2})?$/.test(String(form.cost ?? ''))
+  errors.cost = validCost && costTwoDecimals ? '' : 'Costo inválido (mín. 0.01 y 2 decimales)'
+
   return Object.values(errors).every(v => !v)
 }
 
@@ -122,6 +142,7 @@ function onReset() {
   form.name = ''
   form.description = ''
   form.price = null
+  form.cost = null
 }
 
 async function onSubmit() {
@@ -136,6 +157,7 @@ async function onSubmit() {
       name: form.name.trim(),
       description: form.description.trim(),
       price: Number(form.price),
+      cost: Number(form.cost),
       restaurantId: restaurantId.value,
     })
     toast.success('Platillo creado')
