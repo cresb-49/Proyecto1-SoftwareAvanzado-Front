@@ -13,6 +13,7 @@ export const useApi = () => {
       // Asegura que options.headers sea siempre un Headers
       const headers = new Headers(options.headers as HeadersInit);
       if (token.value) {
+        headers.set("ngrok-skip-browser-warning", "1");
         headers.set("Authorization", `Bearer ${token.value}`);
       }
       options.headers = headers;
