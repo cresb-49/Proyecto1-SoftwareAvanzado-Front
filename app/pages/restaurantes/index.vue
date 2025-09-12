@@ -9,10 +9,10 @@
           >← Regresar</Button
         >
       </div>
-       <div class="mb-4 flex items-end justify-between">
+      <div class="mb-4 flex items-end justify-between">
         <h2 class="text-xl font-semibold text-brand-900">Restaurantes</h2>
         <Button
-          v-if="canManageRestaurants"
+          v-if="canManageRestaurants && !isRestaurantManager"
           variant="primary"
           size="sm"
           to="/restaurantes/crear"
@@ -22,10 +22,8 @@
       </div>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <template v-for="restaurant in restaurants">
-          <Card
-            :img="restaurant.image"
-          >
-          <template #header>
+          <Card :img="restaurant.image">
+            <template #header>
               <div class="flex items-start justify-between gap-3">
                 <div>
                   <h3 class="text-base font-semibold text-brand-900">
@@ -68,12 +66,14 @@
                     size="sm"
                     variant="info"
                     :to="`/restaurantes/${restaurant.id}`"
-                  >Ver</Button>
+                    >Ver</Button
+                  >
                   <Button
                     size="sm"
                     variant="secondary"
                     :to="`/restaurantes/menu/${restaurant.id}`"
-                  >Menú</Button>
+                    >Menú</Button
+                  >
                 </div>
                 <!-- Editar: ADMIN siempre, RESTAURANT_MANAGER solo si es su restaurante -->
                 <template v-if="canSeeEdit">
@@ -82,13 +82,11 @@
                     size="sm"
                     variant="warning"
                     :to="`/restaurantes/editar/${restaurant.id}`"
-                  >Editar</Button>
-                  <Button
-                    v-else
-                    size="sm"
-                    variant="warning"
-                    :disabled="true"
-                  >Editar</Button>
+                    >Editar</Button
+                  >
+                  <Button v-else size="sm" variant="warning" :disabled="true"
+                    >Editar</Button
+                  >
                 </template>
               </div>
             </template>
@@ -103,19 +101,19 @@
 import Button from "~/components/ui/Button.vue";
 import Card from "~/components/ui/Card.vue";
 import { useRestaurantService } from "~/services/restaurants";
-import { computed } from 'vue'
-import { Roles } from '#imports'
-import { useEmployeeService } from '~/services/employee'
+import { computed } from "vue";
+import { Roles } from "#imports";
+import { useEmployeeService } from "~/services/employee";
 
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
 const { isLoggedIn, user } = useAuth();
 
 const clamp5 = (v: any) => {
-  const n = Number(v)
-  return Number.isFinite(n) ? Math.min(5, Math.max(0, n)) : 0
-}
-const rounded = (v: any) => Math.round(clamp5(v))
-const displayRating = (v: any) => clamp5(v).toFixed(1)
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(5, Math.max(0, n)) : 0;
+};
+const rounded = (v: any) => Math.round(clamp5(v));
+const displayRating = (v: any) => clamp5(v).toFixed(1);
 
 // roles permitidos para gestionar restaurantes
 const permitedRoles = [Roles.ADMIN, Roles.RESTAURANT_MANAGER];
@@ -124,20 +122,31 @@ const canManageRestaurants = computed(() => hasAnyRole(permitedRoles));
 const employeeSvc = useEmployeeService();
 
 const isAdmin = computed(() => hasAnyRole([Roles.ADMIN]));
-const isRestaurantManager = computed(() => hasAnyRole([Roles.RESTAURANT_MANAGER]));
+const isRestaurantManager = computed(() =>
+  hasAnyRole([Roles.RESTAURANT_MANAGER])
+);
 
 const { data: myEmployee } = await useAsyncData(
-  () => `me:employee:${String(user.value?.employeeId ?? '')}`,
-  () => (user.value?.employeeId ? employeeSvc.getById(String(user.value.employeeId)) : Promise.resolve(null)),
+  () => `me:employee:${String(user.value?.employeeId ?? "")}`,
+  () =>
+    user.value?.employeeId
+      ? employeeSvc.getById(String(user.value.employeeId))
+      : Promise.resolve(null),
   { server: true }
 );
 
-const myRestaurantId = computed(() => (myEmployee.value as any)?.restaurantId || null);
+const myRestaurantId = computed(
+  () => (myEmployee.value as any)?.restaurantId || null
+);
 
-const canSeeEdit = computed(() => hasAnyRole([Roles.ADMIN, Roles.RESTAURANT_MANAGER]));
+const canSeeEdit = computed(() =>
+  hasAnyRole([Roles.ADMIN, Roles.RESTAURANT_MANAGER])
+);
 
 function canEditRestaurant(id: string) {
-  return isAdmin.value || (isRestaurantManager.value && myRestaurantId.value === id);
+  return (
+    isAdmin.value || (isRestaurantManager.value && myRestaurantId.value === id)
+  );
 }
 
 const restaurantService = useRestaurantService();
