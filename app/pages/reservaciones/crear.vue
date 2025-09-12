@@ -1,5 +1,6 @@
 <template>
   <div class="mx-auto max-w-3xl px-4 py-6">
+    
     <!-- Toolbar -->
     <div class="mb-4 flex items-center justify-between">
       <Button size="sm" variant="secondary" to="/reservaciones"
@@ -14,8 +15,22 @@
       subtitle="Completa la información requerida"
     >
       <form class="grid gap-4 sm:grid-cols-2" @submit.prevent="onSubmit">
+        <!-- Cliente (cuando el usuario es CUSTOMER) -->
+        <div v-if="isCustomer" class="sm:col-span-2 grid gap-3">
+          <div class="rounded-md border border-sand-300 bg-sand-50 p-3">
+            <div class="text-sm text-brand-700">Cliente</div>
+            <div class="text-brand-900">
+              <span class="font-medium">{{ customerClientName }}</span>
+              <span class="ml-2 text-brand-700">NIT:</span>
+              <span class="ml-1">{{ customerClient?.nit || '—' }}</span>
+            </div>
+            <p class="mt-1 text-xs text-brand-700">
+              Esta información se obtuvo de tu cuenta. No es necesario buscar por NIT.
+            </p>
+          </div>
+        </div>
         <!-- Cliente por NIT o Consumidor final -->
-        <div class="sm:col-span-2 grid gap-3">
+        <div v-if="!isCustomer" class="sm:col-span-2 grid gap-3">
           <div class="flex items-end gap-3">
             <InputText
               v-model="form.nit"
@@ -265,6 +280,7 @@
 definePageMeta({ middleware: ["auth"] });
 
 import { reactive, ref, computed, watch, watchEffect } from "vue";
+import { useRoute } from 'vue-router'
 import { useUseRoles } from "~/composables/useRoles";
 import { Roles, useAuth } from "#imports";
 import { useHotelService } from "~/services/hotels";
@@ -329,6 +345,23 @@ const clientErrors = reactive<{ firstName: string; lastName: string }>({
   lastName: "",
 });
 
+// Cliente del usuario (cuando es CUSTOMER)
+const customerClient = ref<any | null>(null)
+const customerClientName = computed(() => {
+  const c: any = customerClient.value
+  if (!c) return ''
+  const first = c.firstName || c.firstNames || ''
+  const last = c.lastName || c.lastNames || ''
+  return `${first} ${last}`.trim()
+})
+
+const { data: clientByUserData } = await useAsyncData(
+  () => `client:by-user:${user.value?.id ?? ''}`,
+  () => (isCustomer.value && user.value?.id)
+    ? clientService.getById(String(user.value.clientId))
+    : Promise.resolve(null)
+)
+
 // Empleado actual (desde auth)
 const currentEmployeeId = computed<string | null>(() => {
   const u: any = user?.value;
@@ -373,6 +406,15 @@ const errors = reactive<Record<string, string>>({
 });
 const saving = ref(false);
 
+watchEffect(() => {
+  // Mantener en ref local
+  customerClient.value = clientByUserData.value as any
+  // Si existe NIT del cliente, úsalo y evita pedir datos de contacto
+  const nitVal = (customerClient.value as any)?.nit
+  if (isCustomer.value && nitVal) {
+    form.nit = String(nitVal)
+  }
+})
 // Cargar hotel si viene por URL y opciones si no
 const fixedHotel = computed(() => !!form.hotelId);
 const { data: hotel } = await useAsyncData(
@@ -646,7 +688,7 @@ async function onSubmit() {
     await reservationService.create({
       hotelId: String(form.hotelId),
       roomId: String(form.roomId),
-      employeeId: String(empId || ""),
+      employeeId: isCustomer.value ? undefined : (empId ? String(empId) : undefined),
       nit: form.nit ? String(form.nit) : null,
       checkInDate: new Date(String(form.checkInDate)).toISOString(),
       checkOutDate: new Date(String(form.checkOutDate)).toISOString(),
