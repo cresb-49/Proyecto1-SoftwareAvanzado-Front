@@ -89,6 +89,7 @@
               <th class="py-2 px-2">Check-out</th>
               <th class="py-2 px-2 text-center">Pagada</th>
               <th class="py-2 px-2 text-right">Total</th>
+              <th class="py-2 px-2 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -116,6 +117,16 @@
               </td>
               <td class="py-2 px-2 text-right">
                 Q {{ formatCurrency(r.total) }}
+              </td>
+              <td class="py-2 px-2 text-right">
+                <Button
+                  v-if="r.paid"
+                  size="sm"
+                  variant="info"
+                  :to="`/reservaciones/comprobante/${r.id}`"
+                >
+                  Comprobante
+                </Button>
               </td>
             </tr>
           </tbody>

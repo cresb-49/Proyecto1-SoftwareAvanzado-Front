@@ -100,6 +100,8 @@ import Card from "~/components/ui/Card.vue";
 import { useHotelService } from "~/services/hotels";
 import { Roles } from "#imports";
 import { useAuth } from "#imports";
+import { useUseRoles } from "~/composables/useRoles";
+import { useEmployeeService } from "~/services/employee";
 
 const clamp5 = (v: any) => {
   const n = Number(v);
@@ -109,17 +111,32 @@ const rounded = (v: any) => Math.round(clamp5(v));
 const displayRating = (v: any) => clamp5(v).toFixed(1);
 
 const hotelService = useHotelService();
+const employeeService = useEmployeeService();
+const { user } = useAuth();
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
 const { isLoggedIn } = useAuth();
 
 // roles permitidos para gestionar hoteles
 const permitedRoles = [Roles.ADMIN, Roles.HOTEL_MANAGER];
 const canManageHotels = computed(() => hasAnyRole(permitedRoles));
+const isHotelManager = computed(() => hasAnyRole([Roles.HOTEL_MANAGER]));
 
 const {
   data: hotels,
   pending: loadingHotels,
   error: loadingHotelsError,
   refresh: refreshHotels,
-} = await useAsyncData("hotels", () => hotelService.getAll());
+} = await useAsyncData('hotels:list-or-single', async () => {
+  // Si es HOTEL_MANAGER, mostrar únicamente el hotel asignado
+  if (isHotelManager.value) {
+    const empId = user.value?.employeeId
+    if (!empId) return []
+    const emp = await employeeService.getById(String(empId))
+    if (!emp?.hotelId) return []
+    const h = await hotelService.getById(String(emp.hotelId))
+    return h ? [h] : []
+  }
+  // De lo contrario (ADMIN u otros roles con permiso), listar todos
+  return await hotelService.getAll()
+}, { server: true })
 </script>

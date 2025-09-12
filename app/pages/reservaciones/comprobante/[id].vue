@@ -72,7 +72,7 @@
               </div>
               <div class="mt-1">
                 <span
-                  v-if="reservation?.isPaid"
+                  v-if="reservation?.paid"
                   class="rounded px-2 py-0.5 text-xs bg-sage-500 text-white"
                   >Pagada</span
                 >
@@ -217,6 +217,11 @@ import { useReservationService } from "~/services/reservations";
 import { useHotelService } from "~/services/hotels";
 import { useRoomService } from "~/services/rooms";
 import type { Reservation as ReservationModel } from "~/services/reservations";
+import { useAuth } from "~/composables/useAuth";
+import { useUseRoles } from "~/composables/useRoles";
+import { Roles } from "#imports";
+import { useClientService } from "~/services/client";
+import type { Client } from "~/services/client";
 
 const toast = useToast();
 const route = useRoute();
@@ -225,6 +230,26 @@ const reservationId = String(route.params.id || "");
 const service = useReservationService();
 const hotelSvc = useHotelService();
 const roomSvc = useRoomService();
+
+// Roles / usuario y cliente (para validar NIT si es CUSTOMER)
+const { user } = useAuth();
+const { hasAnyRole } = useUseRoles();
+const isCustomer = computed(() => hasAnyRole([Roles.CUSTOMER]));
+
+const clientSvc = useClientService();
+const clientId = computed(
+  () => (user.value as any)?.clientId || (user.value as any)?.customerId || null
+);
+
+const { data: clientData } = await useAsyncData(
+  () => `client:${clientId.value || "-"}`,
+  () =>
+    isCustomer.value && clientId.value
+      ? clientSvc.getById(String(clientId.value))
+      : Promise.resolve(null),
+  { watch: [isCustomer, clientId] }
+);
+const client = computed<Client | null>(() => (clientData.value as any) || null);
 
 // Datos de la reservación
 const {
@@ -242,8 +267,22 @@ const reservation = computed<ReservationModel | null>(
 
 // Redirigir si no está pagada (igual que órdenes)
 watchEffect(() => {
-  if (reservation.value && !reservation.value.isPaid) {
+  if (reservation.value && !reservation.value.paid) {
     navigateTo("/");
+  }
+});
+
+// Validar propiedad de la reservación para CUSTOMER: NIT debe coincidir
+watchEffect(() => {
+  if (!reservation.value) return;
+  if (!isCustomer.value) return;
+  if (!clientId.value) return; // sin cliente asociado, no validar aún
+  if (!client.value) return; // esperar a que cargue el cliente
+
+  const rnit = reservation.value.nit || null;
+  const cnit = client.value?.nit || null;
+  if (!rnit || !cnit || rnit !== cnit) {
+    navigateTo("/reservaciones/reservas");
   }
 });
 
@@ -313,7 +352,9 @@ const roomPriceDisplay = computed(() =>
   currency.format(roomNightPrice.value || 0)
 );
 
-const backPath = computed(() => "/reservaciones");
+const backPath = computed(() =>
+  isCustomer.value ? "/reservaciones/reservas" : "/reservaciones"
+);
 
 // PDF / impresión
 const invoiceRef = ref<HTMLElement | null>(null);
