@@ -66,7 +66,6 @@ interface Module {
   icon?: string;
 }
 
-// 🔧 Configuración de módulos (agrega/edita aquí)
 const modules: Module[] = [
   {
     key: "Pagos",
