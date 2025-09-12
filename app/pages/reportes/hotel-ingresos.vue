@@ -110,7 +110,7 @@
                 <td class="py-2 px-2">{{ formatDateTime(r.checkOut) }}</td>
                 <td class="py-2 px-2 text-right">Q {{ currency(r.totalAmount) }}</td>
                 <td class="py-2 px-2 text-center">
-                  <span v-if="r.isPaid" class="rounded px-2 py-0.5 text-xs bg-sage-500 text-white">Pagada</span>
+                  <span v-if="r.paid" class="rounded px-2 py-0.5 text-xs bg-sage-500 text-white">Pagada</span>
                   <span v-else class="rounded px-2 py-0.5 text-xs bg-gold-500/20 text-brand-900 border border-gold-500/40">Pendiente</span>
                 </td>
                 <td class="py-2 px-2">{{ r.paidAt ? formatDateTime(r.paidAt) : '—' }}</td>
