@@ -109,16 +109,47 @@ import Button from "~/components/ui/Button.vue";
 import Card from "~/components/ui/Card.vue";
 import InputText from "~/components/ui/InputText.vue";
 
+import { useRoute } from 'vue-router'
+import { useAuth } from '~/composables/useAuth'
+import { useEmployeeService } from '~/services/employee'
+
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
 const permitedRoles = [Roles.ADMIN, Roles.RESTAURANT_MANAGER];
 const canManageRestaurants = computed(() => hasAnyRole(permitedRoles));
 redirectIfUnauthorized(permitedRoles, "/");
+
+// Auth & employee context
+const { user } = useAuth()
+const employeeService = useEmployeeService()
+
+const isAdmin = computed(() => hasAnyRole([Roles.ADMIN]))
+const isRestaurantManager = computed(() => hasAnyRole([Roles.RESTAURANT_MANAGER]))
+
+// Cargar empleado actual (para validar asignación al restaurante)
+const { data: employeeData } = await useAsyncData(
+  () => `employee:${user.value?.employeeId ?? ''}`,
+  () => (user.value?.employeeId ? employeeService.getById(String(user.value.employeeId)) : Promise.resolve(null))
+)
 
 const toast = useToast();
 const route = useRoute();
 const restaurantService = useRestaurantService();
 const restaurantId = String(route.params.id);
 
+// Si es RESTAURANT_MANAGER, verificar que esté asignado al restaurante actual
+watchEffect(() => {
+  // Si no tiene roles permitidos, ya se redirige arriba
+  if (!canManageRestaurants.value) return
+
+  if (isRestaurantManager.value) {
+    const assignedRestaurantId = (employeeData.value as any)?.restaurantId
+    if (assignedRestaurantId && assignedRestaurantId !== restaurantId) {
+      navigateTo('/')
+    }
+  }
+})
+
+// Inicializar formulario
 type RestaurantForm = {
   image: string;
   description: string;

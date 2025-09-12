@@ -97,6 +97,14 @@ export const useReservationService = () => {
       body: { startDate: checkInDate, endDate: checkOutDate },
     });
 
+  const getReservationsByNit = (nit: string) =>
+    api<Reservation[]>(`${API_SEGMENT}/client/${nit}`, { method: "GET" });
+
+  const getReservationsByNitAndHotel = (nit: string, hotelId: string) =>
+    api<Reservation[]>(`${API_SEGMENT}/client/${nit}/hotel/${hotelId}`, {
+      method: "GET",
+    });
+
   return {
     create,
     getById,
@@ -109,5 +117,7 @@ export const useReservationService = () => {
     reservationsByHotel,
     reservationsByCustomerAndHotel,
     availableRooms,
+    getReservationsByNit,
+    getReservationsByNitAndHotel,
   };
 };

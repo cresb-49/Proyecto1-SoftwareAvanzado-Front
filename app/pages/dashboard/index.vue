@@ -66,7 +66,6 @@ interface Module {
   icon?: string;
 }
 
-// 🔧 Configuración de módulos (agrega/edita aquí)
 const modules: Module[] = [
   {
     key: "Pagos",
@@ -108,7 +107,7 @@ const modules: Module[] = [
     name: "Usuarios",
     description: "Gestión de usuarios del sistema.",
     route: "/usuarios",
-    roles: [Roles.ADMIN, Roles.MANAGER],
+    roles: [Roles.ADMIN],
   },
   {
     key: "reportes",
@@ -150,7 +149,7 @@ const modules: Module[] = [
     key: "mis_consumos",
     name: "Mis Consumos",
     description: "Consulta y gestiona tus consumos.",
-    route: "/mis_consumos",
+    route: "/consumos",
     roles: [Roles.CUSTOMER],
   },
   {

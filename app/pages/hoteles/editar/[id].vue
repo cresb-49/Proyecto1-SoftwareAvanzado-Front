@@ -154,16 +154,42 @@ import Card from "~/components/ui/Card.vue";
 import Select from "~/components/ui/Select.vue";
 import InputText from "~/components/ui/InputText.vue";
 
+import { useAuth } from "~/composables/useAuth";
+import { useEmployeeService } from "~/services/employee";
+
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
 const permitedRoles = [Roles.ADMIN, Roles.HOTEL_MANAGER];
+const isHotelManager = computed(() => hasAnyRole([Roles.HOTEL_MANAGER]));
 const canManageHotels = computed(() => hasAnyRole(permitedRoles));
 redirectIfUnauthorized(permitedRoles, "/");
 
 const toast = useToast();
+const { user } = useAuth();
+const employeeService = useEmployeeService();
 const route = useRoute();
 const hotelService = useHotelService();
 const restaurantService = useRestaurantService();
 const hotelId = String(route.params.id);
+
+// Si es HOTEL_MANAGER, verificar que el empleado esté asignado al hotel de la ruta
+const { data: employeeData, pending: pendingEmployee } = await useAsyncData(
+  () => `employee:${user.value?.employeeId ?? "none"}`,
+  () =>
+    isHotelManager.value && user.value?.employeeId
+      ? employeeService.getById(String(user.value.employeeId))
+      : Promise.resolve(null),
+  { server: true }
+);
+
+watchEffect(() => {
+  if (!isHotelManager.value) return;
+  if (pendingEmployee.value) return; // esperar carga
+  const emp: any = employeeData.value;
+  // Si no hay empleado o no coincide el hotel, redirigir
+  if (!emp || !emp.hotelId || String(emp.hotelId) !== hotelId) {
+    navigateTo("/");
+  }
+});
 
 type HotelForm = {
   image: string;
