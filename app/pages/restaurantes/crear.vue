@@ -89,7 +89,7 @@ import Card from "~/components/ui/Card.vue";
 import InputText from "~/components/ui/InputText.vue";
 
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
-const permitedRoles = [Roles.ADMIN, Roles.RESTAURANT_MANAGER];
+const permitedRoles = [Roles.ADMIN];
 const canManageRestaurants = computed(() => hasAnyRole(permitedRoles));
 redirectIfUnauthorized(permitedRoles, "/");
 
