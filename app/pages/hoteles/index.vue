@@ -12,7 +12,7 @@
       <div class="mb-4 flex items-end justify-between">
         <h2 class="text-xl font-semibold text-brand-900">Hoteles</h2>
         <Button
-          v-if="canManageHotels"
+          v-if="canManageHotels && !isHotelManager"
           variant="primary"
           size="sm"
           to="/hoteles/crear"
