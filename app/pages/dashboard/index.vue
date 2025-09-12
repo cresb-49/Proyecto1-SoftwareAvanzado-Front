@@ -153,6 +153,18 @@ const modules: Module[] = [
     roles: [Roles.CUSTOMER],
   },
   {
+    key: "mis-pagos",
+    name: "Mis Pagos",
+    description: "Consulta el historial de tus pagos.",
+    route: "/pagos/mis-pagos",
+    roles: [
+      Roles.HOTEL_EMPLOYEE,
+      Roles.RESTAURANT_EMPLOYEE,
+      Roles.HOTEL_MANAGER,
+      Roles.RESTAURANT_MANAGER,
+    ],
+  },
+  {
     key: "perfil",
     name: "Ver Perfil",
     description: "Consulta y edita tu perfil.",
