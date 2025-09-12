@@ -86,6 +86,10 @@ import InputText from '~/components/ui/InputText.vue'
 import InputCurrency from '~/components/ui/InputCurrency.vue'
 import { useToast } from '~/composables/useToast'
 import { getMenuItems } from '~/services/menu-items'
+import { useUseRoles } from '~/composables/useRoles'
+import { useAuth } from '~/composables/useAuth'
+import { useEmployeeService } from '~/services/employee'
+import { Roles } from '#imports'
 
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
 const permitedRoles = [Roles.ADMIN, Roles.RESTAURANT_MANAGER];
@@ -108,8 +112,27 @@ const { data, pending, error } = await useAsyncData(
 const item = computed<any>(() => (data.value as any) || null)
 const restaurantId = computed<string>(() => item.value?.restaurant?.id || '')
 const restaurantName = computed<string>(() => item.value?.restaurant?.name || '')
-
 const backPath = computed(() => restaurantId.value ? `/restaurantes/menu/${restaurantId.value}` : '/restaurantes')
+
+// ===== Verificación de pertenencia para RESTAURANT_MANAGER =====
+const { user } = useAuth()
+const employeeSvc = useEmployeeService()
+const isAdmin = computed(() => hasAnyRole([Roles.ADMIN]))
+
+// Cargar empleado del usuario autenticado (si existe)
+const { data: employeeData } = await useAsyncData(
+  () => `employee:${user.value?.employeeId ?? ''}`,
+  () => (user.value?.employeeId ? employeeSvc.getById(String(user.value.employeeId)) : Promise.resolve(null))
+)
+
+// Si es RESTAURANT_MANAGER y el restaurante del platillo no coincide con el asignado, redirigir a inicio
+watchEffect(() => {
+  const rid = restaurantId.value
+  const empRid = (employeeData.value as any)?.restaurantId
+  if (!isAdmin.value && rid && empRid && rid !== empRid) {
+    navigateTo('/')
+  }
+})
 
 // Form state
 const form = reactive<{ name: string; description: string; price: number | null; cost: number | null }>({

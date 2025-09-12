@@ -75,12 +75,21 @@
                     :to="`/restaurantes/menu/${restaurant.id}`"
                   >Menú</Button>
                 </div>
-                <Button
-                  v-if="canManageRestaurants"
-                  size="sm"
-                  variant="warning"
-                  :to="`/restaurantes/editar/${restaurant.id}`"
-                >Editar</Button>
+                <!-- Editar: ADMIN siempre, RESTAURANT_MANAGER solo si es su restaurante -->
+                <template v-if="canSeeEdit">
+                  <Button
+                    v-if="canEditRestaurant(restaurant.id)"
+                    size="sm"
+                    variant="warning"
+                    :to="`/restaurantes/editar/${restaurant.id}`"
+                  >Editar</Button>
+                  <Button
+                    v-else
+                    size="sm"
+                    variant="warning"
+                    :disabled="true"
+                  >Editar</Button>
+                </template>
               </div>
             </template>
           </Card>
@@ -94,9 +103,12 @@
 import Button from "~/components/ui/Button.vue";
 import Card from "~/components/ui/Card.vue";
 import { useRestaurantService } from "~/services/restaurants";
+import { computed } from 'vue'
+import { Roles } from '#imports'
+import { useEmployeeService } from '~/services/employee'
 
 const { hasAnyRole, redirectIfUnauthorized } = useUseRoles();
-const { isLoggedIn } = useAuth();
+const { isLoggedIn, user } = useAuth();
 
 const clamp5 = (v: any) => {
   const n = Number(v)
@@ -108,6 +120,26 @@ const displayRating = (v: any) => clamp5(v).toFixed(1)
 // roles permitidos para gestionar restaurantes
 const permitedRoles = [Roles.ADMIN, Roles.RESTAURANT_MANAGER];
 const canManageRestaurants = computed(() => hasAnyRole(permitedRoles));
+
+const employeeSvc = useEmployeeService();
+
+const isAdmin = computed(() => hasAnyRole([Roles.ADMIN]));
+const isRestaurantManager = computed(() => hasAnyRole([Roles.RESTAURANT_MANAGER]));
+
+const { data: myEmployee } = await useAsyncData(
+  () => `me:employee:${String(user.value?.employeeId ?? '')}`,
+  () => (user.value?.employeeId ? employeeSvc.getById(String(user.value.employeeId)) : Promise.resolve(null)),
+  { server: true }
+);
+
+const myRestaurantId = computed(() => (myEmployee.value as any)?.restaurantId || null);
+
+const canSeeEdit = computed(() => hasAnyRole([Roles.ADMIN, Roles.RESTAURANT_MANAGER]));
+
+function canEditRestaurant(id: string) {
+  return isAdmin.value || (isRestaurantManager.value && myRestaurantId.value === id);
+}
+
 const restaurantService = useRestaurantService();
 
 const {
