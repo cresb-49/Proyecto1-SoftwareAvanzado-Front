@@ -21,5 +21,8 @@ export const useClientService = () => {
   const getByNit = (nit: string) =>
     api<Client>(`${API_SEGMENT}/nit/${nit}`, { method: "GET" });
 
-  return { getById, getAll, create, getByNit };
+  const getClientByUserId = (userId: string) =>
+    api<Client>(`${API_SEGMENT}/user/${userId}`, { method: "GET" });
+
+  return { getById, getAll, create, getByNit, getClientByUserId };
 };
