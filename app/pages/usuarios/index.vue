@@ -30,6 +30,7 @@
 
       <template #cell-acciones="{ row }">
         <div class="flex items-center justify-end gap-2">
+          <Button v-if="canView" size="sm" variant="info" :to="`/usuarios/${row.id}`">Ver</Button>
           <Button size="sm" variant="warning" :to="`/usuarios/editar/${row.id}`">Editar</Button>
           <Button
             v-if="row.state"
@@ -63,9 +64,10 @@ import { useUseRoles } from '~/composables/useRoles'
 import { Roles } from '#imports'
 import { useAuth } from '~/composables/useAuth'
 
-const { redirectIfUnauthorized } = useUseRoles()
+const { redirectIfUnauthorized, hasAnyRole } = useUseRoles()
 const permitedRoles = [Roles.ADMIN, Roles.MANAGER]
 redirectIfUnauthorized(permitedRoles, '/')
+const canView = computed(() => hasAnyRole([Roles.ADMIN, Roles.MANAGER]))
 
 const toast = useToast()
 const userSvc = useUserService()
