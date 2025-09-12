@@ -72,7 +72,7 @@
               </div>
               <div class="mt-1">
                 <span
-                  v-if="reservation?.paid"
+                  v-if="reservation?.isPaid"
                   class="rounded px-2 py-0.5 text-xs bg-sage-500 text-white"
                   >Pagada</span
                 >
@@ -242,7 +242,7 @@ const reservation = computed<ReservationModel | null>(
 
 // Redirigir si no está pagada (igual que órdenes)
 watchEffect(() => {
-  if (reservation.value && !reservation.value.paid) {
+  if (reservation.value && !reservation.value.isPaid) {
     navigateTo("/");
   }
 });

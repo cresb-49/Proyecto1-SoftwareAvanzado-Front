@@ -149,7 +149,7 @@ const modules: Module[] = [
     key: "mis_consumos",
     name: "Mis Consumos",
     description: "Consulta y gestiona tus consumos.",
-    route: "/mis_consumos",
+    route: "/consumos",
     roles: [Roles.CUSTOMER],
   },
   {
