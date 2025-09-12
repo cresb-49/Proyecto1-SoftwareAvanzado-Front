@@ -108,7 +108,7 @@ const modules: Module[] = [
     name: "Usuarios",
     description: "Gestión de usuarios del sistema.",
     route: "/usuarios",
-    roles: [Roles.ADMIN, Roles.MANAGER],
+    roles: [Roles.ADMIN],
   },
   {
     key: "reportes",
