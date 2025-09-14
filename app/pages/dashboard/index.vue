@@ -110,6 +110,13 @@ const modules: Module[] = [
     roles: [Roles.ADMIN],
   },
   {
+    key: "clientes",
+    name: "Clientes",
+    description: "Visualización de clientes y sus datos.",
+    route: "/clientes",
+    roles: [Roles.ADMIN],
+  },
+  {
     key: "reportes",
     name: "Reportes",
     description: "KPIs, ventas y ocupación.",

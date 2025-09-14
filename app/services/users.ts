@@ -18,10 +18,10 @@ export interface CreateEmployee {
   roleName: string;
 }
 
-export interface UpdatePassword{
-    userId: string;
-    oldPassword: string;
-    newPassword: string;
+export interface UpdatePassword {
+  userId: string;
+  oldPassword: string;
+  newPassword: string;
 }
 
 const API_SEGMENT = "/v1/users";
@@ -31,6 +31,12 @@ export const useUserService = () => {
 
   const getById = (id: string) =>
     api<User>(`${API_SEGMENT}/${id}`, { method: "GET" });
+
+  const getByIds = (ids: string[]) =>
+    api<User[]>(`${API_SEGMENT}/ids`, {
+      method: "POST",
+      body: { ids: ids },
+    });
 
   const update = (id: string, data: any) =>
     api<User>(`${API_SEGMENT}/${id}`, { method: "PUT", body: data });
@@ -57,5 +63,6 @@ export const useUserService = () => {
     changeState,
     updatePassword,
     getAll,
+    getByIds,
   };
 };
