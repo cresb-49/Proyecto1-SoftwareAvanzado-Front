@@ -24,5 +24,15 @@ export const useClientService = () => {
   const getClientByUserId = (userId: string) =>
     api<Client>(`${API_SEGMENT}/user/${userId}`, { method: "GET" });
 
-  return { getById, getAll, create, getByNit, getClientByUserId };
+  const getAllClients = () =>
+    api<Client[]>(`${API_SEGMENT}/all`, { method: "GET" });
+
+  return {
+    getById,
+    getAll,
+    create,
+    getByNit,
+    getClientByUserId,
+    getAllClients,
+  };
 };
