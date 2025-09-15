@@ -31,6 +31,16 @@ import { useUserService } from "~/services/users";
 import type { Client } from "~/services/client";
 import type { User } from "~/services/users";
 
+const { redirectIfUnauthorized } = useUseRoles();
+const allowed = [
+  Roles.ADMIN,
+  Roles.RESTAURANT_EMPLOYEE,
+  Roles.RESTAURANT_MANAGER,
+  Roles.HOTEL_EMPLOYEE,
+  Roles.HOTEL_MANAGER,
+];
+redirectIfUnauthorized(allowed, "/");
+
 const clientSvc = useClientService();
 const userSvc = useUserService();
 
